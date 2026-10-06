@@ -123,13 +123,16 @@ TASKPY
     print -r -- "How to look, cheapest first:"
     print -r -- "1. Gmail: search_threads 'after:$sinced -from:me -category:promotions -category:social', pageSize 30."
     print -r -- "   get_thread on anything that could match a task (search previews miss new messages)."
-    print -r -- "2. Slack: slack_search_public_and_private with filters 'after:$sinceiso' for messages to, from"
+    print -r -- "2. Slack, linked threads FIRST and ALWAYS: call slack_read_thread on EVERY thread in the 'Linked Slack"
+    print -r -- "   threads' list at the bottom (channel_id and message_ts are given). Keep every reply newer than the"
+    print -r -- "   cutoff from anyone other than {{OWNER_FIRST}}, even if it does not mention him: teammates often reply to each"
+    print -r -- "   other on his tasks (setting up a call, taking an item, answering a question) and that is news."
+    print -r -- "   Then slack_search_public_and_private with filters 'after:$sinceiso' for messages to, from"
     print -r -- "   or mentioning {{OWNER_FIRST}} (to:<@{{OWNER_SLACK_ID}}>, with:<@{{OWNER_SLACK_ID}}>, and keywords from the tasks)."
-    print -r -- "   slack_read_thread on any Slack thread a task links to, and keep only replies newer than the cutoff."
     print -r -- "3. Fireflies: fireflies_search 'from:$sinceiso' for meetings since then; read the summary only"
     print -r -- "   when a title or summary touches a task."
     print -r -- "4. ClickUp: clickup_get_task on a task's synced ClickUp link only if steps 1 to 3 hint at news."
-    print -r -- "Do not chase every link on every task. One alert per real event; skip anything you are unsure of."
+    print -r -- "Apart from the linked Slack threads, do not chase every link on every task. One alert per real event."
     print -r -- ""
     print -r -- "For each hit print one line, fields separated by a single TAB, nothing else on the line:"
     print -r -- "A<TAB>task number<TAB>source: Gmail, Slack, Fireflies, Drive or ClickUp<TAB>direct link to the email,"
@@ -143,6 +146,24 @@ TASKPY
     print -r -- ""
     print -r -- "The open tasks:"
     cat "$W/tasks.txt"
+    print -r -- ""
+    print -r -- "Linked Slack threads (read every one with slack_read_thread):"
+    /usr/bin/python3 - "$W/tasks.txt" <<'LINKPY'
+import re, sys
+n, seen = None, set()
+for line in open(sys.argv[1], encoding="utf-8"):
+    m = re.match(r"^TASK (\d+):", line)
+    if m: n = m.group(1); continue
+    for u in re.findall(r"https://[\w.-]*slack\.com/archives/[^\s)]+", line):
+        c = re.search(r"/archives/([A-Z0-9]+)/p(\d{10})(\d{6})", u)
+        if not c or not n: continue
+        t = re.search(r"thread_ts=([\d.]+)", u)
+        ts = t.group(1) if t else f"{c.group(2)}.{c.group(3)}"
+        if (c.group(1), ts) in seen: continue
+        seen.add((c.group(1), ts))
+        print(f"TASK {n}: channel_id {c.group(1)}, message_ts {ts}")
+if not seen: print("(none)")
+LINKPY
   } > "$W/prompt.md"
   log "sync: looking back to $sinceh"
   out=$(claude_run 1200 "$MODEL" "$W/prompt.md" ToolSearch Read \

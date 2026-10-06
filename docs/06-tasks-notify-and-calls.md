@@ -66,6 +66,8 @@ Every 30 minutes from 4:30 am to 11:30 pm (`WATCH_EVERY`, `WATCH_START_MIN`, `WA
 - a comment on its ClickUp task,
 - a doc it was waiting on being shared.
 
+**Linked Slack threads are always read.** Before the run, the script pulls every Slack thread linked from an open task (channel id and thread timestamp, taken from the permalink, `thread_ts` when it is a reply) into a "Linked Slack threads" list at the end of the prompt. The model must call `slack_read_thread` on every one of them first, and keep every reply newer than the cutoff from anyone other than the owner, even if it does not mention them: teammates often reply to each other on the owner's tasks (setting up a call, taking an item, answering a question), and that is news. Only then does it search Slack for messages to, from or mentioning the owner. Every other source is checked cheapest first (Gmail search, then Fireflies, then ClickUp only when something hints at news), and links other than Slack threads are not chased one by one.
+
 Read only Gmail, Slack, Fireflies, Drive and ClickUp tools; it can never send, post or edit. Each hit becomes an alert in `.watch/alerts.json`: `{title: [{id, src, url, when, what, next, found}]}`, with a notification. The task moves up under the pinned ones, its title shimmers violet, and a box says what happened (with the link) and the suggested next step. **work it** puts the news in the brief under "New since last check". **got it** stops the glow (`.watch/seen`) until something else lands.
 
 ## Work it
