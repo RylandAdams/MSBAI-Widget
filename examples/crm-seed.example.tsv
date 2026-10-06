@@ -1,0 +1,5 @@
+# crm-seed.tsv: what the CRM tab needs that ClickUp does not hold yet. Edit freely; the next sync picks it up.
+# kind<TAB>company<TAB>name<TAB>organization<TAB>people (Name (role or email); Name)<TAB>pursuits (;)<TAB>what we need<TAB>date YYYY-MM-DD<TAB>ClickUp task id<TAB>note
+contract	MSBAI	Example Phase II contract	Example Agency	Pat Doe (TPOC); Chris Roe	-	Milestone review, Phase III follow on	-	-	Example row: replace with your own
+partner	Tam Fortis	Example National Lab	Example National Lab	Dana Poe (PI)	EXAMPLE-TOPIC-01	Letter of support	2026-11-01	-	Example row
+date	Nexcavate	Example submission window opens	-	-	EXAMPLE-TOPIC-02	-	2026-11-15	-	Example key date

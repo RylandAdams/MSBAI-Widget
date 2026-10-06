@@ -1,0 +1,4329 @@
+{
+"updated": "2026-10-04",
+"companies": [
+{
+"id": "msbai",
+"name": "MSBAI",
+"color": "#7FB2FF",
+"system": "guru",
+"tag": "GURU, the hybrid intelligence platform that drives expert engineering software",
+"home": "msbai"
+},
+{
+"id": "tamfortis",
+"name": "Tam Fortis",
+"color": "#FF9F5A",
+"system": "reactor",
+"tag": "A helicopter portable microreactor, 35 to 40 kW for 5 to 10 years",
+"home": "tamfortis"
+},
+{
+"id": "nexcavate",
+"name": "Nexcavate",
+"color": "#5ED3A1",
+"system": "permitpulse",
+"tag": "PermitPulse, an AI copilot for mining permit teams",
+"home": "nexcavate"
+}
+],
+"pages": {
+"msbai": {
+"id": "msbai",
+"title": "MSBAI",
+"company": "msbai",
+"kind": "company",
+"parent": "home",
+"what": "MSBAI (Microsurgeonbot Inc.), founded in 2017, builds GURU: a hierarchical neuro symbolic multi agent platform that drives digital engineering and operations workflows on supercomputers and in the cloud.",
+"fits": "GURU is the one product. OrbitGuard, CFD automation, MBE GURU, the microreactor digital twin and PermitPulse are services built on it.",
+"connects": [
+"guru",
+"svc-orbitguard",
+"svc-cfd",
+"svc-mbe",
+"programs"
+],
+"current": "Programs today span the AFRL GURU Gen 2 contract and HPCMP Phase III, the OrbitGuard SBIR, NASA STTR work and DOE ALCC time on Frontier and Aurora.",
+"status": "current",
+"owner": "Allan",
+"sources": [
+{
+"t": "GURU paper, June 2026",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+},
+{
+"t": "MSBAI Company Information (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-33391"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [
+"guru",
+"programs",
+"svc-orbitguard",
+"svc-cfd",
+"svc-mbe"
+],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#general",
+"u": "https://msbai.slack.com/archives/CBGKWT5M3"
+},
+{
+"k": "slack",
+"t": "#bizdev",
+"u": "https://msbai.slack.com/archives/C01SQDMFLGH"
+},
+{
+"k": "clickup",
+"t": "Goals & Workstreams space",
+"u": "https://app.clickup.com/20115771/v/s/90114201246"
+},
+{
+"k": "clickup",
+"t": "Cross Cutting workstreams",
+"u": "https://app.clickup.com/20115771/v/f/90118135058"
+},
+{
+"k": "drive",
+"t": "MSBAI BIZDEV",
+"u": "https://drive.google.com/drive/folders/1nigd7gql2lLIgx8nKErmPT7icbpoNdgR"
+},
+{
+"k": "drive",
+"t": "GURU Marketing Materials",
+"u": "https://drive.google.com/drive/folders/1x-qoTtCvcKM4LVFAnNDDg1ZgQjhj3Das"
+}
+],
+"lists": [],
+"folders": [
+"90118135056",
+"90118135057",
+"90118135060",
+"90118135058"
+],
+"find": "MSBAI"
+},
+"guru": {
+"id": "guru",
+"title": "GURU",
+"company": "msbai",
+"kind": "system",
+"parent": "msbai",
+"what": "GURU learns and runs expert workflows in engineering software: modeling, simulation, analysis, visualization and virtual world building. One architecture and one training factory serve every application.",
+"fits": "Read it top down: what a person sees (the interface), how agents talk (global workspace), who does the work (the agent society), what keeps it honest (CIL and rules), where it runs (execution), and how new skills are made (the Learning Engine).",
+"connects": [
+"g-ui",
+"g-gw",
+"g-agents",
+"g-cil",
+"g-exec",
+"g-learn"
+],
+"current": "GURU Gen 2 is the current build: Apptainer services under process compose at gurudev.cloud, CFD stacks on HPCMP systems.",
+"status": "current",
+"owner": "Anton (proposed)",
+"sources": [
+{
+"t": "GURU paper, section 3",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+},
+{
+"t": "GURU Gen 2 System Architecture",
+"u": "https://docs.google.com/document/d/1B6mHUWX0JFXhKHfxN7s7zwCdlU6LgfJq6RYmahE3w_M/edit"
+},
+{
+"t": "GURU Gen 2 System Diagrams",
+"u": "https://docs.google.com/presentation/d/1jyXZr1QN4pI_9s72_cdBwsvYvXsaNnC36OkETRNJq9o/edit"
+},
+{
+"t": "Learning Engine Overview (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-27591"
+}
+],
+"questions": [
+"Which parts of the paper's architecture are deployed today and which are planned? Needs Anton's sign off."
+],
+"terms": [
+"Gen 2",
+"hybrid intelligence",
+"neuro symbolic",
+"society of agents"
+],
+"stream": "",
+"children": [
+"g-ui",
+"g-gw",
+"g-agents",
+"g-cil",
+"g-exec",
+"g-learn",
+"g-tooling"
+],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#guru_gen2_requirements_and_architecture",
+"u": "https://msbai.slack.com/archives/C05PXTD7W22"
+},
+{
+"k": "slack",
+"t": "#gen2-capabilities",
+"u": "https://msbai.slack.com/archives/C06PNGDEZSR"
+},
+{
+"k": "clickup",
+"t": "GURU Gen 2 (Dev) space",
+"u": "https://app.clickup.com/20115771/v/s/90113932521"
+},
+{
+"k": "clickup",
+"t": "GURU Gen 2 docs",
+"u": "https://app.clickup.com/20115771/v/f/90111677285"
+},
+{
+"k": "drive",
+"t": "Gen 2 architecture resources",
+"u": "https://drive.google.com/drive/folders/1Ds0gF5CiSnazy8NDxiPWeOXz1WPx7VuQ"
+},
+{
+"k": "drive",
+"t": "GURU Supporting Materials",
+"u": "https://drive.google.com/drive/folders/1gDysJ3h36kjEUz9LHrtJCAFGwo_7QDYM"
+}
+],
+"lists": [
+"901114113999"
+],
+"folders": [],
+"find": "GURU Gen 2"
+},
+"g-ui": {
+"id": "g-ui",
+"title": "User interface",
+"company": "msbai",
+"kind": "part",
+"parent": "guru",
+"what": "A browser app (a PWA) that runs on phones, tablets, desktops and immersive displays. It takes speech, text, images and on screen controls, and shows plots, job status, remote views and workflow controls.",
+"fits": "It does no heavy compute. It turns what a person asks for into intent and posts it to the global workspace; the PWA counts as one more agent there. When a request is ambiguous it shows the top three to five readings to choose from.",
+"connects": [
+"g-gw",
+"g-exec"
+],
+"current": "Gen 2: a Vue.js front end with a Node and Express UI backend behind NGINX. Software that has no full API is streamed as a remote display (noVNC, one seat per user).",
+"status": "current",
+"owner": "Front end team",
+"sources": [
+{
+"t": "GURU paper, section 3.1",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+},
+{
+"t": "Gen 2 Components and Features (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-27211"
+},
+{
+"t": "GURU Gen 2 System Architecture",
+"u": "https://docs.google.com/document/d/1B6mHUWX0JFXhKHfxN7s7zwCdlU6LgfJq6RYmahE3w_M/edit"
+}
+],
+"questions": [],
+"terms": [
+"PWA",
+"noVNC",
+"skins",
+"remote display"
+],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#guru-ui",
+"u": "https://msbai.slack.com/archives/C01R0PR7PT7"
+},
+{
+"k": "slack",
+"t": "#guru-gen-2-design-eleken",
+"u": "https://msbai.slack.com/archives/C09FCQEK1PH"
+},
+{
+"k": "drive",
+"t": "GURU_UI",
+"u": "https://drive.google.com/drive/folders/1G-mGl07YtjcIc5tWsBAyrU_9e3saupiF"
+}
+],
+"lists": [
+"901114113999"
+],
+"folders": [],
+"find": "GURU UI"
+},
+"g-gw": {
+"id": "g-gw",
+"title": "Global workspace",
+"company": "msbai",
+"kind": "part",
+"parent": "guru",
+"what": "The shared message pool agents use to talk across machines, with modules for logging, attention and explainability. Low priority traffic flows through event pools; salient items rise to a shared blackboard.",
+"fits": "It sits between the interface and the agents. There is no central decider: agents read the pool, post findings, and the workspace broadcasts what matters. Safety checks and job failures skip the pool and use direct, deterministic channels.",
+"connects": [
+"g-ui",
+"g-agents",
+"g-cil"
+],
+"current": "Runs on MQTT topics such as workspace/inputs/raw and workspace/inputs/structured. Kafka event sourcing was discussed; today domain orchestrators for CFD and space ops do much of the coordination.",
+"status": "current",
+"owner": "Anton (proposed)",
+"sources": [
+{
+"t": "GURU paper, section 3.2",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+},
+{
+"t": "Blackboard and Goal Management (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-27971"
+},
+{
+"t": "Selection of Architecture (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-28111"
+},
+{
+"t": "GURU Gen 2 System Diagrams",
+"u": "https://docs.google.com/presentation/d/1jyXZr1QN4pI_9s72_cdBwsvYvXsaNnC36OkETRNJq9o/edit"
+}
+],
+"questions": [
+"The paper calls it a coordination design rather than a measured result. What should we claim externally?"
+],
+"terms": [
+"Global Workspace Theory",
+"blackboard",
+"MQTT",
+"attention"
+],
+"stream": "Common Internal Language & Agent Blackboard Orchestration",
+"children": [
+"g-blackboard"
+],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#self_orchestration_and_voice",
+"u": "https://msbai.slack.com/archives/C01B9FH4E5V"
+},
+{
+"k": "slack",
+"t": "#guru_gen2_requirements_and_architecture",
+"u": "https://msbai.slack.com/archives/C05PXTD7W22"
+}
+],
+"lists": [
+"901114327892",
+"901114327893"
+],
+"folders": [],
+"find": "global workspace"
+},
+"g-blackboard": {
+"id": "g-blackboard",
+"title": "Blackboard",
+"company": "msbai",
+"kind": "part",
+"parent": "g-gw",
+"what": "Shared memory where knowledge sources (skill agents, RL agents, multimodal models) post findings and partial solutions. Each subtask gets its own blackboard and agent society.",
+"fits": "The global workspace sits above the blackboards and makes the higher level calls. Pattern pieces: global goal manager, agent management, plan management, skill management.",
+"connects": [
+"g-gw",
+"g-agents"
+],
+"current": "Publish and subscribe over MQTT. Hussein and Anton proposed competing event strategies; see the down select meeting.",
+"status": "current",
+"owner": "Anton (proposed)",
+"sources": [
+{
+"t": "AI Blackboard Pattern (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-27891"
+},
+{
+"t": "Down Select Meeting (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-31211"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [
+"901114327892"
+],
+"folders": [],
+"find": "blackboard"
+},
+"g-agents": {
+"id": "g-agents",
+"title": "Agent society",
+"company": "msbai",
+"kind": "part",
+"parent": "guru",
+"what": "Many small agents, each with one narrow job: perception, prediction, optimization, constraint checks, software navigation. Only the agents a task needs wake up, and they form a temporary coalition.",
+"fits": "Agents are organized in three layers: navigation at the bottom, actions in the middle, planning on top. They announce themselves on the global workspace with presence messages (role, outputs, host, jobs).",
+"connects": [
+"g-gw",
+"g-learn",
+"g-cil",
+"g-exec"
+],
+"current": "Gen 2 model servers include llama server (Qwen3 30B), CLIP, Voxtral speech to text and TRELLIS image to 3D.",
+"status": "current",
+"owner": "Anton (proposed)",
+"sources": [
+{
+"t": "GURU paper, section 3.2",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+},
+{
+"t": "GURU Gen 2 System Architecture",
+"u": "https://docs.google.com/document/d/1B6mHUWX0JFXhKHfxN7s7zwCdlU6LgfJq6RYmahE3w_M/edit"
+},
+{
+"t": "Skills Agents (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-30411"
+}
+],
+"questions": [],
+"terms": [
+"coalition",
+"presence message",
+"skill agent"
+],
+"stream": "",
+"children": [
+"g-nav",
+"g-act",
+"g-plan"
+],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#geometry_search_and_synthesis",
+"u": "https://msbai.slack.com/archives/C05RNN2S3QS"
+},
+{
+"k": "clickup",
+"t": "Registry (Dev) space",
+"u": "https://app.clickup.com/20115771/v/s/90113948962"
+}
+],
+"lists": [
+"901114201432",
+"901114201433"
+],
+"folders": [],
+"find": "GURU agents"
+},
+"g-nav": {
+"id": "g-nav",
+"title": "Navigation layer",
+"company": "msbai",
+"kind": "part",
+"parent": "g-agents",
+"what": "Agents that operate the software itself: interfaces, file systems, databases and remote displays.",
+"fits": "The bottom layer of the hierarchy. It guards against losing touch with the live state of the tool being driven.",
+"connects": [
+"g-act",
+"g-exec"
+],
+"current": "Earlier GURU mapped interfaces by brute force on supercomputers with computer vision and OCR; Anton proposed learning from expert sessions instead.",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "GURU paper, Table 1",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+},
+{
+"t": "ARTIST Learning Engine (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-27591"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [
+"901114201433"
+],
+"folders": [],
+"find": "software navigation"
+},
+"g-act": {
+"id": "g-act",
+"title": "Action layer",
+"company": "msbai",
+"kind": "part",
+"parent": "g-agents",
+"what": "Bounded decisions: anomaly detection, parameter prediction, grid quality scoring, optimization.",
+"fits": "The middle layer. It guards against a single invalid decision, and every action passes the rules engine before it reaches a tool.",
+"connects": [
+"g-nav",
+"g-plan",
+"g-rules"
+],
+"current": "The grid quality library scores meshes on 30+ metrics across 15 mesh formats.",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "GURU paper, Table 1 and section 3.5",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [
+"901114201431"
+],
+"folders": [],
+"find": "grid quality"
+},
+"g-plan": {
+"id": "g-plan",
+"title": "Planning layer",
+"company": "msbai",
+"kind": "part",
+"parent": "g-agents",
+"what": "Multi step workflows, scenario generation and policy search.",
+"fits": "The top layer. It breaks a request into steps (for CFD: geometry, mesh, boundary conditions, solver settings, job, post processing) and guards against a plan drifting open loop.",
+"connects": [
+"g-act",
+"g-gw"
+],
+"current": "Hierarchical RL runs task execution under the global workspace.",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "GURU paper, Table 1",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+},
+{
+"t": "The Learning Engine (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-29291"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [
+"901114201431"
+],
+"folders": [],
+"find": "workflow planning"
+},
+"g-cil": {
+"id": "g-cil",
+"title": "Common Internal Language",
+"company": "msbai",
+"kind": "part",
+"parent": "guru",
+"what": "The shared neuro symbolic language that links agents, tools, models and provenance. Every message states types, units, physical limits, uncertainty and where it came from.",
+"fits": "It runs across every layer rather than being a layer. LLMs only translate what a person asks into CIL; they do not make consequential engineering or operating decisions. Fotis called it GURU's nervous system.",
+"connects": [
+"g-gw",
+"g-agents",
+"g-rules"
+],
+"current": "Four structures: ontologies, the interaction scene, CIL messages on the global workspace, and translators. Versioned, grounded, with a full chain of custody.",
+"status": "current",
+"owner": "Fotis (proposed)",
+"sources": [
+{
+"t": "GURU paper, section 3.3",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+},
+{
+"t": "GURU architecture and CIL wiki example",
+"u": "https://docs.google.com/document/d/1k4SK06rwKj0JjqhBdhz_Hig4qhCtpnPipJ7EzG6MarQ/edit"
+},
+{
+"t": "AI Standup, Apr 24, 2:30:17",
+"u": "https://app.fireflies.ai/view/01KPCVR4Q9DZCYPJQ0MK5JASJ6"
+}
+],
+"questions": [],
+"terms": [
+"CIL",
+"ontology",
+"translator",
+"provenance"
+],
+"stream": "Common Internal Language & Agent Blackboard Orchestration",
+"children": [
+"g-rules",
+"g-ontology"
+],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#self_orchestration_and_voice",
+"u": "https://msbai.slack.com/archives/C01B9FH4E5V"
+}
+],
+"lists": [
+"901114327892",
+"901114327893"
+],
+"folders": [],
+"find": "common internal language"
+},
+"g-rules": {
+"id": "g-rules",
+"title": "Rules engine",
+"company": "msbai",
+"kind": "part",
+"parent": "g-cil",
+"what": "A small deterministic checker. It tests rules, schemas, units, preconditions, solver contracts and safety limits before an action can reach a tool or an actuator.",
+"fits": "It is not a chatbot: a conversation agent uses it the way a person uses a calculator. It returns the valid data, the invalid values with hints, and what is still missing.",
+"connects": [
+"g-act",
+"g-cil"
+],
+"current": "Measured: removing it cut physical compliance by about 13 percentage points. Learned models rank; validated physics decides.",
+"status": "current",
+"owner": "Rules owner (not named)",
+"sources": [
+{
+"t": "Rules: Introduction (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-64891"
+},
+{
+"t": "GURU paper, section 3.5",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [
+"901114327892"
+],
+"folders": [],
+"find": "rules engine"
+},
+"g-ontology": {
+"id": "g-ontology",
+"title": "Ontologies",
+"company": "msbai",
+"kind": "part",
+"parent": "g-cil",
+"what": "JSON objects, defined by ontology_schema.json, that describe a domain: entities are assets, properties are attributes.",
+"fits": "The rules engine evaluates input against one or more ontologies at once (the multi ontology demo).",
+"connects": [
+"g-rules"
+],
+"current": "Example ontologies are descriptive and real, starting with the virtual world.",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "Ontology Definition (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-22591"
+},
+{
+"t": "Multi ontology hybrid architecture (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-26111"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [
+"901114327892"
+],
+"folders": [],
+"find": "ontology"
+},
+"g-exec": {
+"id": "g-exec",
+"title": "Execution environment",
+"company": "msbai",
+"kind": "part",
+"parent": "guru",
+"what": "Where the work actually runs: containerized jobs in the cloud, on supercomputers, or on a local machine. It stays cloud agnostic.",
+"fits": "Agents ask for compute through the global workspace; jobs report status and results back. The interface can stream any running application to the user.",
+"connects": [
+"g-agents",
+"g-ui",
+"g-tooling"
+],
+"current": "Gen 2 on HPCMP: Raider and Warhawk ready, Narwhal in progress, Carpenter, Nautilus and Blueback partial. Singularity and Apptainer containers on HPC, Kubernetes behind an API gateway in the cloud.",
+"status": "current",
+"owner": "Ion (proposed)",
+"sources": [
+{
+"t": "GURU Gen 2 System Architecture",
+"u": "https://docs.google.com/document/d/1B6mHUWX0JFXhKHfxN7s7zwCdlU6LgfJq6RYmahE3w_M/edit"
+},
+{
+"t": "API and Container Management (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-26031"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "HPC Operations",
+"children": [],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#hpc-concepts",
+"u": "https://msbai.slack.com/archives/C01U1S3981M"
+},
+{
+"k": "slack",
+"t": "#hpc-status",
+"u": "https://msbai.slack.com/archives/C03UKEYSC05"
+},
+{
+"k": "slack",
+"t": "#devops",
+"u": "https://msbai.slack.com/archives/C05V35EUB41"
+},
+{
+"k": "clickup",
+"t": "Supercomputer space",
+"u": "https://app.clickup.com/20115771/v/s/90114082928"
+},
+{
+"k": "drive",
+"t": "HPCMP",
+"u": "https://drive.google.com/drive/folders/1xP_QS3M9BbZhCEW4JNei8wE4CZ22iibC"
+}
+],
+"lists": [
+"901114114000"
+],
+"folders": [],
+"find": "HPCMP"
+},
+"g-learn": {
+"id": "g-learn",
+"title": "Learning Engine",
+"company": "msbai",
+"kind": "part",
+"parent": "guru",
+"what": "The agent factory. It trains and compares model families on HPC and registers the best model for each target: AutoML, transformers and VLMs, decision transformers and RL, graph networks, JEPA world models.",
+"fits": "New skills enter GURU only through here: specify, collect data, train, validate, register, version, regression test. It is a hybrid, hierarchical learner, not one big LLM.",
+"connects": [
+"g-agents",
+"g-data",
+"g-tooling"
+],
+"current": "Builds on MSBAI's 2017 multi framework AutoML work. Leadership scale runs on Frontier and Aurora under DOE ALCC.",
+"status": "current",
+"owner": "Kyrylo (proposed)",
+"sources": [
+{
+"t": "GURU paper, section 4.2",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+},
+{
+"t": "Learning Engine Overview (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-27591"
+},
+{
+"t": "GURU Gen 2 System Diagrams",
+"u": "https://docs.google.com/presentation/d/1jyXZr1QN4pI_9s72_cdBwsvYvXsaNnC36OkETRNJq9o/edit"
+}
+],
+"questions": [],
+"terms": [
+"agent factory",
+"AutoML",
+"JEPA",
+"decision transformer"
+],
+"stream": "",
+"children": [
+"g-data"
+],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#ai-team-strategyandprogress",
+"u": "https://msbai.slack.com/archives/C014L3RAMF1"
+},
+{
+"k": "clickup",
+"t": "Learning Engine (Dev) space",
+"u": "https://app.clickup.com/20115771/v/s/90113930893"
+},
+{
+"k": "clickup",
+"t": "Registry (Dev) space",
+"u": "https://app.clickup.com/20115771/v/s/90113948962"
+}
+],
+"lists": [
+"901114338826"
+],
+"folders": [],
+"find": "Learning Engine"
+},
+"g-data": {
+"id": "g-data",
+"title": "Data factory",
+"company": "msbai",
+"kind": "part",
+"parent": "g-learn",
+"what": "The first stage of the training factory. It turns raw simulation output, workflow logs and domain records into validated training sets.",
+"fits": "Cleaning, normalization, feature extraction, reproducible splits, Latin hypercube sampling. Its output feeds the Learning Engine.",
+"connects": [
+"g-learn"
+],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "GURU paper, section 4.1",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [
+"901114201432"
+],
+"folders": [],
+"find": "training data"
+},
+"g-tooling": {
+"id": "g-tooling",
+"title": "Tooling and infrastructure",
+"company": "msbai",
+"kind": "part",
+"parent": "guru",
+"what": "What it takes to train and ship agents at scale: leadership class training runs, HPC stacks, containers, the GitLab repos.",
+"fits": "Underpins the Learning Engine and the execution environment.",
+"connects": [
+"g-learn",
+"g-exec"
+],
+"current": "A world model run at 8,000 nodes and RL at 2,000 nodes on DOE systems; repo msbai2/guru_gen2; hardened base images in a private GitLab registry.",
+"status": "current",
+"owner": "Ion (proposed)",
+"sources": [
+{
+"t": "GURU paper, section 10",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+},
+{
+"t": "Infrastructure (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-30391"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#frontier-project",
+"u": "https://msbai.slack.com/archives/C036GRN7RK7"
+},
+{
+"k": "slack",
+"t": "#devops",
+"u": "https://msbai.slack.com/archives/C05V35EUB41"
+},
+{
+"k": "clickup",
+"t": "Supercomputer space",
+"u": "https://app.clickup.com/20115771/v/s/90114082928"
+}
+],
+"lists": [
+"901114114000"
+],
+"folders": [],
+"find": "Frontier Aurora"
+},
+"svc-orbitguard": {
+"id": "svc-orbitguard",
+"title": "OrbitGuard",
+"company": "msbai",
+"kind": "service",
+"parent": "msbai",
+"what": "A space domain awareness copilot built on GURU. It detects, classifies and predicts satellite maneuvers.",
+"fits": "Uses the agent society with JEPA and graph models; blackboard style logging gives an audit trail.",
+"connects": [
+"guru",
+"g-learn"
+],
+"current": "Demonstrated at the SDA TAP Lab with UDL and Kafka integration. Accuracy and object counts are in the deck; check claims before reuse.",
+"status": "check",
+"owner": "Ryland",
+"sources": [
+{
+"t": "OrbitGuard deck",
+"u": "https://docs.google.com/presentation/d/1FOAK59JCWjacqoUK0b885MGbf_jhyMogH9VIt4CM17o/edit"
+},
+{
+"t": "SDA TAP Lab knowledge base (ClickUp)",
+"u": "https://app.clickup.com/20115771/v/dc/k5w9v-41151/k5w9v-71591"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "OrbitGuard Space Domain Awareness & Anomaly Detection",
+"children": [],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#sda_tap_lab_apollo_accelerator",
+"u": "https://msbai.slack.com/archives/C07FAEH24HM"
+},
+{
+"k": "slack",
+"t": "#spaceforce_whitecell_phase2",
+"u": "https://msbai.slack.com/archives/C064CCLE528"
+},
+{
+"k": "clickup",
+"t": "OrbitGuard folder",
+"u": "https://app.clickup.com/20115771/v/f/90118135060"
+},
+{
+"k": "drive",
+"t": "OrbitGuard TACFI",
+"u": "https://drive.google.com/drive/folders/1GvDY_T6vkqfZ1p5rlDyDqVruCdj8wETW"
+},
+{
+"k": "drive",
+"t": "OrbitGuard Demos",
+"u": "https://drive.google.com/drive/folders/1QjD1yu1k3UuX9rrEV51OZ65HKgrbh0Ck"
+}
+],
+"lists": [
+"901114114015",
+"901114338826"
+],
+"folders": [
+"90118135060"
+],
+"find": "OrbitGuard"
+},
+"svc-cfd": {
+"id": "svc-cfd",
+"title": "CFD automation",
+"company": "msbai",
+"kind": "service",
+"parent": "msbai",
+"what": "Autonomous meshing and simulation for aerodynamics, the core of the HPCMP Phase III work.",
+"fits": "Planning agents run the CFD chain (geometry, mesh, solver, post processing) on the execution environment.",
+"connects": [
+"guru",
+"g-plan",
+"g-exec"
+],
+"current": "Converged rate on unseen geometries went from under 1 percent to 74 percent, Mach 0.3 to 6 across three facilities.",
+"status": "current",
+"owner": "Ion (proposed)",
+"sources": [
+{
+"t": "GURU paper, section 5",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "SU2 Validation & Hypersonic Cases",
+"children": [],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#cfd_applications",
+"u": "https://msbai.slack.com/archives/C02MDKZHV97"
+},
+{
+"k": "clickup",
+"t": "HPCMP Phase III folder",
+"u": "https://app.clickup.com/20115771/v/f/90118135056"
+},
+{
+"k": "drive",
+"t": "AFRL GURU Gen 2 Phase III",
+"u": "https://drive.google.com/drive/folders/1FvwhcezbTNHDckH5eAayK8jSGP0Sa3LX"
+}
+],
+"lists": [
+"901114113988",
+"901114113986",
+"901114113987",
+"901114114004"
+],
+"folders": [
+"90118135056"
+],
+"find": "CFD SU2"
+},
+"svc-mbe": {
+"id": "svc-mbe",
+"title": "MBE GURU",
+"company": "msbai",
+"kind": "service",
+"parent": "msbai",
+"what": "GURU for airspace and reentry decision support under NASA. It drives NASA DAIDALUS for debris reroutes and checks regulations for gaps.",
+"fits": "Links model based systems engineering with regulatory knowledge graphs.",
+"connects": [
+"guru",
+"g-cil"
+],
+"current": "NASA Phase I; Phase II pursuit and paper in progress.",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "GURU paper, section 7",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "MBE GURU NASA Phase I",
+"children": [],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "clickup",
+"t": "NASA Phase I folder",
+"u": "https://app.clickup.com/20115771/v/f/90118135057"
+}
+],
+"lists": [
+"901114113991"
+],
+"folders": [
+"90118135057"
+],
+"find": "MBE GURU NASA"
+},
+"programs": {
+"id": "programs",
+"title": "Programs",
+"company": "msbai",
+"kind": "overview",
+"parent": "msbai",
+"what": "The contracts and allocations the work runs under.",
+"fits": "Each program maps to a ClickUp Goals & Workstreams folder, so the wiki and the workstreams view stay linked.",
+"connects": [
+"svc-cfd",
+"svc-orbitguard",
+"svc-mbe"
+],
+"current": "HPCMP Phase III (CFD); OrbitGuard Phase II (CDAO); NASA Phase I (MBE GURU); DOE ALCC on Frontier and Aurora; plus the cross cutting workstreams.",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "GURU paper, acknowledgments",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "clickup",
+"t": "Goals & Workstreams space",
+"u": "https://app.clickup.com/20115771/v/s/90114201246"
+},
+{
+"k": "clickup",
+"t": "MSBAI · Phase III HPCMP (CFD)",
+"u": "https://app.clickup.com/20115771/v/f/90118135056"
+},
+{
+"k": "clickup",
+"t": "MSBAI · Phase I NASA (MBE GURU)",
+"u": "https://app.clickup.com/20115771/v/f/90118135057"
+},
+{
+"k": "clickup",
+"t": "MSBAI · Phase II OrbitGuard (CDAO)",
+"u": "https://app.clickup.com/20115771/v/f/90118135060"
+},
+{
+"k": "clickup",
+"t": "MSBAI · Cross Cutting",
+"u": "https://app.clickup.com/20115771/v/f/90118135058"
+}
+],
+"lists": [],
+"folders": [],
+"find": "Programs"
+},
+"tamfortis": {
+"id": "tamfortis",
+"title": "Tam Fortis",
+"company": "tamfortis",
+"kind": "company",
+"parent": "home",
+"what": "Tam Fortis Solutions builds the first truly portable nuclear power family: a 4 ft, 35 to 40 kW microreactor and a 10 to 15 W power cell.",
+"fits": "MSBAI's GURU supports the reactor's design studies and its digital twin; the Microreactor SSOT holds the governed design values.",
+"connects": [
+"reactor",
+"tf-ssot",
+"tf-people"
+],
+"current": "INL allocated a 2028 test slot in its DOME facility. Liberty Station, South Carolina is the intended manufacturing site.",
+"status": "current",
+"owner": "Allan",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+},
+{
+"t": "AI Standup, Oct 2",
+"u": "https://app.fireflies.ai/view/01M3CJNQ29A6QZMVKMJ3ATF6JF"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [
+"reactor",
+"tf-ssot",
+"tf-people"
+],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#tamfortissolutions",
+"u": "https://msbai.slack.com/archives/C08PZ1TTJ65"
+},
+{
+"k": "clickup",
+"t": "Tam Fortis workstreams",
+"u": "https://app.clickup.com/20115771/v/f/90118135097"
+},
+{
+"k": "clickup",
+"t": "SSOT space",
+"u": "https://app.clickup.com/20115771/v/s/90114195400"
+},
+{
+"k": "drive",
+"t": "Tam Fortis Solutions",
+"u": "https://drive.google.com/drive/folders/1caCkpPU39Pb2zsGLBMm2IL4R63zRazOy"
+},
+{
+"k": "drive",
+"t": "Internal Documents, Tam Fortis",
+"u": "https://drive.google.com/drive/folders/1b4ySbHXPTYLZl4x_5dVkooy1Y2A77puh"
+}
+],
+"lists": [],
+"folders": [
+"90118135097"
+],
+"find": "Tam Fortis"
+},
+"reactor": {
+"id": "reactor",
+"title": "Microreactor",
+"company": "tamfortis",
+"kind": "system",
+"parent": "tamfortis",
+"what": "Helicopter portable and meltdown proof: 35 to 40 kWe from 100 to 135 kWth for 5 to 10 years without refueling, under 5 tons, fits a CH 47 sling load or a pickup bed.",
+"fits": "Start from the box, then open it: the core makes heat, heat pipes carry it out, a heat exchanger hands it to sCO2, a turbine makes power, a dry cooler rejects the rest, and power electronics deliver it.",
+"connects": [
+"r-core",
+"r-heatpipes",
+"r-hx",
+"r-turbine",
+"r-cooling",
+"r-drums",
+"r-power",
+"r-structure",
+"r-autonomy"
+],
+"current": "Neutronics results not validated as of June 3. Design values live in the SSOT.",
+"status": "check",
+"owner": "Robert",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+},
+{
+"t": "SSOT Master Definition",
+"u": "https://docs.google.com/document/d/1R9DiJQgZPU-u0AWKKnoK7Dd9-DYKN8mI78_Ni03YC4U/edit"
+},
+{
+"t": "Monday AI, Feb 16, 27:18",
+"u": "https://app.fireflies.ai/view/01KHEGDRS8PVXSYT6WJXZQ49SN"
+}
+],
+"questions": [
+"The reactor has no product name yet. DOME is INL's test bed, not ours."
+],
+"terms": [],
+"stream": "Microreactor Design Studies",
+"children": [
+"r-core",
+"r-heatpipes",
+"r-hx",
+"r-turbine",
+"r-cooling",
+"r-drums",
+"r-power",
+"r-structure",
+"r-autonomy"
+],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#tamfortissolutions",
+"u": "https://msbai.slack.com/archives/C08PZ1TTJ65"
+},
+{
+"k": "drive",
+"t": "Internal Documents, Tam Fortis",
+"u": "https://drive.google.com/drive/folders/1b4ySbHXPTYLZl4x_5dVkooy1Y2A77puh"
+}
+],
+"lists": [
+"901114114072",
+"901114338828",
+"901114114071"
+],
+"folders": [],
+"find": "microreactor"
+},
+"r-core": {
+"id": "r-core",
+"title": "Reactor core",
+"company": "tamfortis",
+"kind": "part",
+"parent": "reactor",
+"what": "The fuel and moderator region that makes the heat, with an epithermal spectrum.",
+"fits": "Heat leaves through the heat pipes; the control drums around it set reactivity; shielding wraps it.",
+"connects": [
+"r-fuel",
+"r-moderator",
+"r-heatpipes",
+"r-drums"
+],
+"current": "Two baselines disagree: the read ahead says up to 61 cm diameter and 50 to 80 cm tall; Robert's Core Design 6.x uses 15 cm by 80 cm.",
+"status": "conflict",
+"owner": "Robert",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+},
+{
+"t": "SSOT Master Definition, 7.7",
+"u": "https://docs.google.com/document/d/1R9DiJQgZPU-u0AWKKnoK7Dd9-DYKN8mI78_Ni03YC4U/edit"
+}
+],
+"questions": [
+"Which core dimensions are current? Reconcile the read ahead with Core Design 6.x."
+],
+"terms": [],
+"stream": "",
+"children": [
+"r-fuel",
+"r-moderator"
+],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Reactor core"
+},
+"r-fuel": {
+"id": "r-fuel",
+"title": "Fuel pins and spacing",
+"company": "tamfortis",
+"kind": "part",
+"parent": "r-core",
+"what": "FCM TRISO fuel, HALEU at 19.75 percent, packing fraction 0.40 to 0.45.",
+"fits": "Spacing between fuel pins and moderator pins sets the neutron spectrum. The SSOT tracks pin pitch, count, diameter, layout and fuel volume fraction.",
+"connects": [
+"r-moderator",
+"r-core"
+],
+"current": "The NRIC RFA loading: 54 pins radially, 14 high, 756 pins at 12 mm by 50 mm. Prismatic pins, cylinders or TRISO tubes is still open.",
+"status": "check",
+"owner": "Robert",
+"sources": [
+{
+"t": "SSOT Master Definition, 4.1 and 7.6",
+"u": "https://docs.google.com/document/d/1R9DiJQgZPU-u0AWKKnoK7Dd9-DYKN8mI78_Ni03YC4U/edit"
+},
+{
+"t": "Microreactor SSOT (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-54951/k5w9v-70971"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Fuel pins and spacing"
+},
+"r-moderator": {
+"id": "r-moderator",
+"title": "Moderator",
+"company": "tamfortis",
+"kind": "part",
+"parent": "r-core",
+"what": "Yttrium hydride pins spread through the fuel region, with zirconium hydride as the fallback. Target moderator to fuel ratio 1.5 to 2.5.",
+"fits": "Slows neutrons near the fuel. Robert proposes smaller pins next to the fuel to manage a possibly positive temperature coefficient.",
+"connects": [
+"r-fuel",
+"r-core"
+],
+"current": "",
+"status": "current",
+"owner": "Robert",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+},
+{
+"t": "SSOT Master Definition, 7.6",
+"u": "https://docs.google.com/document/d/1R9DiJQgZPU-u0AWKKnoK7Dd9-DYKN8mI78_Ni03YC4U/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Moderator"
+},
+"r-heatpipes": {
+"id": "r-heatpipes",
+"title": "Heat pipes",
+"company": "tamfortis",
+"kind": "part",
+"parent": "reactor",
+"what": "Passive sodium heat pipes, typically 8 to 12, running at 600 to 800 C, with KRUSTY heritage. Potassium is the alternate.",
+"fits": "They carry heat from the core to the heat exchanger with no pumps, and they remove decay heat after shutdown.",
+"connects": [
+"r-core",
+"r-hx"
+],
+"current": "Open: split the pipes at the axial midplane, avoid a central plenum, check single pipe failure at 110 percent power.",
+"status": "check",
+"owner": "Robert",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+},
+{
+"t": "SSOT Master Definition",
+"u": "https://docs.google.com/document/d/1R9DiJQgZPU-u0AWKKnoK7Dd9-DYKN8mI78_Ni03YC4U/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Heat pipes"
+},
+"r-hx": {
+"id": "r-hx",
+"title": "Heat exchanger",
+"company": "tamfortis",
+"kind": "part",
+"parent": "reactor",
+"what": "Printed circuit heat exchangers (Heatric or Alfa Laval) that move heat from the heat pipes into the sCO2 loop.",
+"fits": "The handoff between the nuclear side and the power side.",
+"connects": [
+"r-heatpipes",
+"r-turbine"
+],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Heat exchanger"
+},
+"r-turbine": {
+"id": "r-turbine",
+"title": "Turbine generator",
+"company": "tamfortis",
+"kind": "part",
+"parent": "reactor",
+"what": "A recuperated supercritical CO2 Brayton cycle, 20 to 25 percent efficient for the first unit, aiming for 28 to 32 percent with recompression.",
+"fits": "Turns heat into electricity; rejects the rest to the dry cooler.",
+"connects": [
+"r-hx",
+"r-cooling",
+"r-power"
+],
+"current": "Barber Nichols 75 to 100 kW turbine, generator and compressor. Stirling is the contingency.",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+}
+],
+"questions": [],
+"terms": [
+"Brayton cycle",
+"sCO2"
+],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Turbine generator"
+},
+"r-cooling": {
+"id": "r-cooling",
+"title": "Cooling",
+"company": "tamfortis",
+"kind": "part",
+"parent": "reactor",
+"what": "A forced air dry cooler rejecting 60 to 80 kWth with no water. A natural convection radiator is the alternate.",
+"fits": "Takes waste heat from the turbine loop. Decay heat goes out passively through the heat pipes.",
+"connects": [
+"r-turbine",
+"r-heatpipes"
+],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Cooling"
+},
+"r-drums": {
+"id": "r-drums",
+"title": "Reactivity control",
+"company": "tamfortis",
+"kind": "part",
+"parent": "reactor",
+"what": "6 to 12 rotating boron carbide control drums in a beryllium reflector, spring loaded to fail safe.",
+"fits": "They sit around the core and turn to raise or lower reactivity.",
+"connects": [
+"r-core",
+"r-autonomy"
+],
+"current": "Robert recommends removing the Flint external neutron source. The SCRAM method is still open.",
+"status": "check",
+"owner": "Robert",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+},
+{
+"t": "SSOT Master Definition",
+"u": "https://docs.google.com/document/d/1R9DiJQgZPU-u0AWKKnoK7Dd9-DYKN8mI78_Ni03YC4U/edit"
+}
+],
+"questions": [
+"What is the shutdown architecture if Flint is removed?"
+],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Reactivity control"
+},
+"r-power": {
+"id": "r-power",
+"title": "Power electronics",
+"company": "tamfortis",
+"kind": "part",
+"parent": "reactor",
+"what": "Conditions the generator output to 480 V AC or 28 V DC, configurable.",
+"fits": "The last step before the customer's plug.",
+"connects": [
+"r-turbine"
+],
+"current": "No subsystem description exists yet beyond the output spec.",
+"status": "gap",
+"owner": "",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+},
+{
+"t": "Monday AI, Feb 16, 27:59",
+"u": "https://app.fireflies.ai/view/01KHEGDRS8PVXSYT6WJXZQ49SN"
+}
+],
+"questions": [
+"Who writes the power electronics page?"
+],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Power electronics"
+},
+"r-structure": {
+"id": "r-structure",
+"title": "Structure and shielding",
+"company": "tamfortis",
+"kind": "part",
+"parent": "reactor",
+"what": "A bird bone structure built for sling loads and rough handling, with tungsten and boron carbide composite shielding.",
+"fits": "Wraps everything. Target dose 2.5 millirem at 1 meter. A MIL STD transport survivability test is planned.",
+"connects": [
+"r-core"
+],
+"current": "Borated HDPE and tungsten layers are under study.",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+},
+{
+"t": "SSOT Master Definition",
+"u": "https://docs.google.com/document/d/1R9DiJQgZPU-u0AWKKnoK7Dd9-DYKN8mI78_Ni03YC4U/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Structure and shielding"
+},
+"r-autonomy": {
+"id": "r-autonomy",
+"title": "Autonomy and digital twin",
+"company": "tamfortis",
+"kind": "part",
+"parent": "reactor",
+"what": "AI anomaly detection and load following, with a person in the loop for startup and shutdown.",
+"fits": "This is where GURU meets the reactor: the digital twin simulates subsystem configurations.",
+"connects": [
+"r-drums",
+"guru"
+],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+},
+{
+"t": "GURU paper, section 8",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "Reactor Control Prototype & Digital Twin",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [
+"901114114073"
+],
+"folders": [],
+"find": "digital twin reactor"
+},
+"tf-ssot": {
+"id": "tf-ssot",
+"title": "Microreactor SSOT",
+"company": "tamfortis",
+"kind": "tool",
+"parent": "tamfortis",
+"what": "A browser app (ssot.reactor.guru) for governing the reactor configuration and design studies: browse, draft, compare, attach evidence, release through review.",
+"fits": "Holds the design values the reactor pages point to. GitLab holds the live config, Postgres the drafts and audit history.",
+"connects": [
+"reactor",
+"r-fuel"
+],
+"current": "One registered config (microreactor_core) with 46 fields and 7 materials. No physics calculations, no geometry, no viewer yet.",
+"status": "current",
+"owner": "Ayesha",
+"sources": [
+{
+"t": "Microreactor SSOT (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-54951/k5w9v-70971"
+},
+{
+"t": "SSOT Master Definition",
+"u": "https://docs.google.com/document/d/1R9DiJQgZPU-u0AWKKnoK7Dd9-DYKN8mI78_Ni03YC4U/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "Microreactor SSOT",
+"children": [],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "clickup",
+"t": "SSOT space",
+"u": "https://app.clickup.com/20115771/v/s/90114195400"
+}
+],
+"lists": [
+"901114114071"
+],
+"folders": [],
+"find": "SSOT reactor"
+},
+"tf-people": {
+"id": "tf-people",
+"title": "People",
+"company": "tamfortis",
+"kind": "overview",
+"parent": "tamfortis",
+"what": "Allan (cofounder and CEO); Stash (cofounder and chief visionary, phone first); Robert Howe (reactor engineer, Navy and industry nuclear background); Mollie Jahner (BD and investment); Mark Miller (regulatory advisor, 35 years at NRC); Chris Dawson (technical advisor).",
+"fits": "Stash needs one simple page he can search on his phone. Robert works top down and bottom up. Molly needs collateral on the road.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "Pentagon Read Ahead v4",
+"u": "https://docs.google.com/document/d/1R98txhQblwyw0cZ80_tvN71zmbQmZ7pHsMC9FvwLNYw/edit"
+},
+{
+"t": "AI Standup, Oct 2, 54:59",
+"u": "https://app.fireflies.ai/view/01M3CJNQ29A6QZMVKMJ3ATF6JF"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [
+"901114114068",
+"901114114070"
+],
+"folders": [],
+"find": "Tam Fortis"
+},
+"nexcavate": {
+"id": "nexcavate",
+"title": "Nexcavate",
+"company": "nexcavate",
+"kind": "company",
+"parent": "home",
+"what": "Nexcavate builds PermitPulse, an AI copilot for mining permit teams. US mines take about 29 years from discovery to production, and over half of that goes to permitting and litigation.",
+"fits": "PermitPulse was demoed as a GURU Gen 2 workflow.",
+"connects": [
+"permitpulse"
+],
+"current": "A Nevada NDEP pilot auto graded about 2,000 historical permits.",
+"status": "check",
+"owner": "Ayesha (proposed)",
+"sources": [
+{
+"t": "PermitPulse deck",
+"u": "https://docs.google.com/presentation/d/1rltJ3mwGfBAUytTos_i6dvBkHuAITlIYnNXzb_aphDY/edit"
+},
+{
+"t": "FY27 one pager",
+"u": "https://docs.google.com/document/d/1cpV3DYZtyVelE5zo-zivpR5DzHoXoE7tVrwc8CvElrc/edit"
+}
+],
+"questions": [
+"Is PermitPulse formally a service built on GURU? No document says so yet."
+],
+"terms": [],
+"stream": "",
+"children": [
+"permitpulse",
+"n-pulse"
+],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#nexcavate",
+"u": "https://msbai.slack.com/archives/C07RABB39L0"
+},
+{
+"k": "slack",
+"t": "#nexcavate_collaboration",
+"u": "https://msbai.slack.com/archives/C08U39DBEVB"
+},
+{
+"k": "clickup",
+"t": "Nexcavate workstreams",
+"u": "https://app.clickup.com/20115771/v/f/90118135098"
+},
+{
+"k": "drive",
+"t": "Nexcavate",
+"u": "https://drive.google.com/drive/folders/1-9pjHbJ3jTxQK0prSbam8apn4H4SU1F1"
+},
+{
+"k": "drive",
+"t": "Nexcavate Materials",
+"u": "https://drive.google.com/drive/folders/1Mj2ZcjfceLe4t8qCxVIjrQd0KXludo-_"
+}
+],
+"lists": [],
+"folders": [
+"90118135098"
+],
+"find": "Nexcavate"
+},
+"permitpulse": {
+"id": "permitpulse",
+"title": "PermitPulse",
+"company": "nexcavate",
+"kind": "system",
+"parent": "nexcavate",
+"what": "Assembles permit applications, checks every section against the controlling regulation, and keeps a full audit trail.",
+"fits": "Follow a permit from intake to the agency: documents in, application assembled, each section checked, every change logged, agency review.",
+"connects": [
+"pp-intake",
+"pp-assemble",
+"pp-check",
+"pp-audit",
+"pp-agency"
+],
+"current": "Projected: about 95 percent less back and forth with the agency, 12 to 18 months saved per cycle. Projections, not results.",
+"status": "check",
+"owner": "",
+"sources": [
+{
+"t": "PermitPulse deck",
+"u": "https://docs.google.com/presentation/d/1rltJ3mwGfBAUytTos_i6dvBkHuAITlIYnNXzb_aphDY/edit"
+},
+{
+"t": "FY27 one pager",
+"u": "https://docs.google.com/document/d/1cpV3DYZtyVelE5zo-zivpR5DzHoXoE7tVrwc8CvElrc/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "PermitPulse",
+"children": [
+"pp-intake",
+"pp-assemble",
+"pp-check",
+"pp-audit",
+"pp-agency"
+],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#nexcavate",
+"u": "https://msbai.slack.com/archives/C07RABB39L0"
+},
+{
+"k": "drive",
+"t": "PermitPulse one pager assets",
+"u": "https://drive.google.com/drive/folders/1BNBk8XyjmXUmETUdX2ZQfMJiMmroX8Vc"
+}
+],
+"lists": [
+"901114114077",
+"901114114076"
+],
+"folders": [],
+"find": "PermitPulse"
+},
+"pp-intake": {
+"id": "pp-intake",
+"title": "Document intake",
+"company": "nexcavate",
+"kind": "part",
+"parent": "permitpulse",
+"what": "Pulls in the applicant's documents and the agency's historical permits.",
+"fits": "Feeds the assembly step.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "PermitPulse deck",
+"u": "https://docs.google.com/presentation/d/1rltJ3mwGfBAUytTos_i6dvBkHuAITlIYnNXzb_aphDY/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Document intake"
+},
+"pp-assemble": {
+"id": "pp-assemble",
+"title": "Application assembly",
+"company": "nexcavate",
+"kind": "part",
+"parent": "permitpulse",
+"what": "Builds the permit application section by section.",
+"fits": "Each section goes to the compliance check.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "PermitPulse deck",
+"u": "https://docs.google.com/presentation/d/1rltJ3mwGfBAUytTos_i6dvBkHuAITlIYnNXzb_aphDY/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Application assembly"
+},
+"pp-check": {
+"id": "pp-check",
+"title": "Compliance check",
+"company": "nexcavate",
+"kind": "part",
+"parent": "permitpulse",
+"what": "Checks every section against the controlling regulatory text.",
+"fits": "The same idea as GURU's rules engine: deterministic checks before anything goes out.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "PermitPulse deck",
+"u": "https://docs.google.com/presentation/d/1rltJ3mwGfBAUytTos_i6dvBkHuAITlIYnNXzb_aphDY/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Compliance check"
+},
+"pp-audit": {
+"id": "pp-audit",
+"title": "Audit trail",
+"company": "nexcavate",
+"kind": "part",
+"parent": "permitpulse",
+"what": "Records every change and every check.",
+"fits": "What the agency reviewer sees.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "PermitPulse deck",
+"u": "https://docs.google.com/presentation/d/1rltJ3mwGfBAUytTos_i6dvBkHuAITlIYnNXzb_aphDY/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Audit trail"
+},
+"pp-agency": {
+"id": "pp-agency",
+"title": "Agency review",
+"company": "nexcavate",
+"kind": "part",
+"parent": "permitpulse",
+"what": "The regulator reviews a complete, checked application.",
+"fits": "The NDEP pilot is the first agency.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "PermitPulse deck",
+"u": "https://docs.google.com/presentation/d/1rltJ3mwGfBAUytTos_i6dvBkHuAITlIYnNXzb_aphDY/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Agency review"
+},
+"n-pulse": {
+"id": "n-pulse",
+"title": "Pulse Extract",
+"company": "nexcavate",
+"kind": "part",
+"parent": "nexcavate",
+"what": "A hardware concept for recovering value from mining waste.",
+"fits": "A separate Nexcavate workstream.",
+"connects": [],
+"current": "Concept stage; no document yet.",
+"status": "gap",
+"owner": "",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "Pulse Extract",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [
+"901114338832"
+],
+"folders": [],
+"find": "Pulse Extract"
+},
+"work": {
+"id": "work",
+"title": "How we work",
+"company": "all",
+"kind": "section",
+"parent": "home",
+"what": "How the companies run: tasks, workstreams, ClickUp, meetings, email, proposals, writing, OpenClaw. Then the runbooks only one person knew.",
+"fits": "Every runbook names a keeper. When something breaks and gets fixed, the fix lands here.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [
+"w-tasks",
+"w-streams",
+"w-clickup",
+"w-meetings",
+"w-email",
+"w-proposals",
+"w-writing",
+"w-openclaw",
+"h-paraview",
+"h-dsrc",
+"h-baby",
+"h-singularity",
+"h-kestrel",
+"h-rules",
+"h-lessons"
+],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "How we work"
+},
+"h-paraview": {
+"id": "h-paraview",
+"title": "Restart the HPCMP ParaView node",
+"company": "all",
+"kind": "howto",
+"parent": "work",
+"what": "How to bring the remote visualization node back when it stops responding.",
+"fits": "Only Ion knew how. Allan: one of numerous examples of why we need a company wiki.",
+"connects": [
+"g-exec"
+],
+"current": "Steps not written yet. Ion to record them.",
+"status": "gap",
+"owner": "Ion",
+"sources": [
+{
+"t": "Start a searchable company wiki and capture the HPC remote visualization procedure (ClickUp task)",
+"u": "https://app.clickup.com/t/868m1zaa5"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "GURU ParaView Automation",
+"children": [],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "clickup",
+"t": "ParaView docs",
+"u": "https://app.clickup.com/20115771/v/f/90118302400"
+},
+{
+"k": "slack",
+"t": "#data-visualization",
+"u": "https://msbai.slack.com/archives/C023R15JPV3"
+}
+],
+"lists": [
+"901114145046"
+],
+"folders": [],
+"find": "ParaView"
+},
+"h-dsrc": {
+"id": "h-dsrc",
+"title": "Running GURU on DSRC",
+"company": "all",
+"kind": "howto",
+"parent": "work",
+"what": "Start scripts and PBS jobs for running GURU on DoD supercomputers (start guru, guru mpi ava, Mustang job scripts).",
+"fits": "Part of the execution environment.",
+"connects": [
+"g-exec"
+],
+"current": "Mostly 2024; check against Gen 2.",
+"status": "stale",
+"owner": "",
+"sources": [
+{
+"t": "Team Process SOPs (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-51691/k5w9v-65471"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2024-06-01",
+"links": [
+{
+"k": "clickup",
+"t": "Supercomputer space",
+"u": "https://app.clickup.com/20115771/v/s/90114082928"
+}
+],
+"lists": [
+"901114114000"
+],
+"folders": [],
+"find": "DSRC"
+},
+"h-baby": {
+"id": "h-baby",
+"title": "Run several CFD simulations on the Baby Server",
+"company": "all",
+"kind": "howto",
+"parent": "work",
+"what": "How to queue multiple CFD runs on the in house server.",
+"fits": "",
+"connects": [
+"svc-cfd"
+],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "Running Multiple CFD Simulations on the Baby Server (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-45891"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Run several CFD simulations on the Baby Server"
+},
+"h-singularity": {
+"id": "h-singularity",
+"title": "Singularity containers on HPC",
+"company": "all",
+"kind": "howto",
+"parent": "work",
+"what": "Building and running Singularity and Apptainer images, including SU2.",
+"fits": "",
+"connects": [
+"g-exec",
+"g-tooling"
+],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "Infrastructure (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-30391"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "slack",
+"t": "#devops",
+"u": "https://msbai.slack.com/archives/C05V35EUB41"
+}
+],
+"lists": [],
+"folders": [],
+"find": "Singularity container"
+},
+"h-kestrel": {
+"id": "h-kestrel",
+"title": "Kestrel tutorials",
+"company": "all",
+"kind": "howto",
+"parent": "work",
+"what": "Ryland's collection of Kestrel tutorials and the knowledge extraction work.",
+"fits": "Allan used this as the example of work that is hard to find.",
+"connects": [
+"svc-cfd"
+],
+"current": "Link the collection here.",
+"status": "gap",
+"owner": "Ryland",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "Kestrel Knowledge Extraction",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [
+"901114113987",
+"901114114004"
+],
+"folders": [],
+"find": "Kestrel tutorial"
+},
+"h-rules": {
+"id": "h-rules",
+"title": "Company rules",
+"company": "all",
+"kind": "howto",
+"parent": "work",
+"what": "Register finished work in the wiki. Hand off work before you go away. Files live in the shared Drive, never only on a laptop or a personal Drive.",
+"fits": "Allan set these across 2025 and 2026.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "Allan",
+"sources": [
+{
+"t": "Organizing Google Drive Files (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-51691/k5w9v-68811"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Company rules"
+},
+"h-lessons": {
+"id": "h-lessons",
+"title": "Lessons learned",
+"company": "all",
+"kind": "howto",
+"parent": "work",
+"what": "Short write ups of what broke, the fix, and how not to repeat it.",
+"fits": "Problems got a dirty fix and came back. Each lesson links to the part it touches.",
+"connects": [],
+"current": "Empty. The first entry should be the ParaView node.",
+"status": "gap",
+"owner": "",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Lessons learned"
+},
+"past": {
+"id": "past",
+"title": "Past work",
+"company": "all",
+"kind": "section",
+"parent": "home",
+"what": "Proposals, papers, reviewer feedback, studies and demos, findable by topic.",
+"fits": "Ask for all the proposals about space, or every proposal that argues for reinforcement learning.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [
+"p-proposals",
+"p-paper",
+"p-demos",
+"p-taplab"
+],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Past work"
+},
+"p-proposals": {
+"id": "p-proposals",
+"title": "Proposals",
+"company": "all",
+"kind": "past",
+"parent": "past",
+"what": "STTR and DoD, Princeton, OLCF Frontier and Summit, ALCC 2023 to 2025, the DOE accelerator GUI, White Cell scenarios, autonomous mission design.",
+"fits": "",
+"connects": [],
+"current": "Up to 2024 in the old wiki; newer ones live in the Proposals space.",
+"status": "stale",
+"owner": "",
+"sources": [
+{
+"t": "MSBAI Proposals (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-28371"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2024-12-01",
+"links": [
+{
+"k": "clickup",
+"t": "Proposals space",
+"u": "https://app.clickup.com/20115771/v/s/90110367357"
+},
+{
+"k": "drive",
+"t": "Proposals 2026",
+"u": "https://drive.google.com/drive/folders/1qgOrOlFFCvGVNg45WvF0cUndPsORSDEF"
+},
+{
+"k": "drive",
+"t": "Proposals, selected",
+"u": "https://drive.google.com/drive/folders/191jwhcSL-gvGZ_6_DwKFGL2rkp2r4-HV"
+},
+{
+"k": "drive",
+"t": "Proposals, not selected",
+"u": "https://drive.google.com/drive/folders/1qLLaowCUUx-7cG5ehGAf8lvPpTRSAoDi"
+}
+],
+"lists": [
+"901114113994"
+],
+"folders": [],
+"find": "proposal"
+},
+"p-paper": {
+"id": "p-paper",
+"title": "GURU paper (arXiv, June 2026)",
+"company": "msbai",
+"kind": "past",
+"parent": "past",
+"what": "The current description of GURU's architecture, results and programs.",
+"fits": "Most GURU pages here cite it.",
+"connects": [
+"guru"
+],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "GURU paper",
+"u": "https://docs.google.com/document/d/1l-5Az9YEQMAkYqIDh5sFWSzS1ggxtyTrk17fWKUKP-k/edit"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "Research Papers & Publications",
+"children": [],
+"updated": "2026-10-04",
+"links": [
+{
+"k": "drive",
+"t": "arXiv publication",
+"u": "https://drive.google.com/drive/folders/1IKyU2k9NOWXkLKpuS5bzZ8pYB9IIhl5t"
+}
+],
+"lists": [
+"901114113998"
+],
+"folders": [],
+"find": "arXiv GURU paper"
+},
+"p-demos": {
+"id": "p-demos",
+"title": "GURU Gen 1 and Gen 2 demos",
+"company": "msbai",
+"kind": "past",
+"parent": "past",
+"what": "Virtual world, geometry search and synthesis, trajectory, GMAT orbital mechanics, FEA, CFD SU2, SysML.",
+"fits": "",
+"connects": [
+"guru"
+],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "Demo Details, Jan 2024 (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-41151/k5w9v-30831"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2024-01-15",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "GURU Gen 1 and Gen 2 demos"
+},
+"p-taplab": {
+"id": "p-taplab",
+"title": "SDA TAP Lab knowledge base",
+"company": "msbai",
+"kind": "past",
+"parent": "past",
+"what": "Built by OpenClaw from 52 transcripts and 575 Slack messages: 12 pages, every claim cited.",
+"fits": "The best example of the page format so far.",
+"connects": [
+"svc-orbitguard"
+],
+"current": "Nothing added since July 30. Edits made in ClickUp are overwritten on the next publish.",
+"status": "stale",
+"owner": "Ryland",
+"sources": [
+{
+"t": "SDA TAP Lab knowledge base (ClickUp)",
+"u": "https://app.clickup.com/20115771/v/dc/k5w9v-41151/k5w9v-71591"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-07-30",
+"links": [
+{
+"k": "slack",
+"t": "#sda_tap_lab_apollo_accelerator",
+"u": "https://msbai.slack.com/archives/C07FAEH24HM"
+}
+],
+"lists": [],
+"folders": [],
+"find": "TAP Lab"
+},
+"decisions": {
+"id": "decisions",
+"title": "Decisions and questions",
+"company": "all",
+"kind": "section",
+"parent": "home",
+"what": "What was decided, when, by whom and why, and the questions still open.",
+"fits": "When a question gets answered, the answer is registered here so the next person finds it.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [
+"d-clickup",
+"d-guru-one",
+"d-layer",
+"q-people",
+"q-access",
+"q-owner"
+],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Decisions and questions"
+},
+"d-clickup": {
+"id": "d-clickup",
+"title": "The wiki lives where people already work",
+"company": "all",
+"kind": "decision",
+"parent": "decisions",
+"what": "Feb 12 2026: Allan chose ClickUp so the wiki sits in the tool people already use. Confluence was dropped in 2024 because nobody used it.",
+"fits": "",
+"connects": [],
+"current": "Oct 2 2026: Allan endorsed a knowledge layer that pulls from ClickUp, Drive and other sources with its own interface.",
+"status": "current",
+"owner": "Allan",
+"sources": [
+{
+"t": "AI Standup, Oct 2",
+"u": "https://app.fireflies.ai/view/01M3CJNQ29A6QZMVKMJ3ATF6JF"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "The wiki lives where people already work"
+},
+"d-guru-one": {
+"id": "d-guru-one",
+"title": "GURU is the one product",
+"company": "all",
+"kind": "decision",
+"parent": "decisions",
+"what": "Ayesha's rule: GURU is the product; OrbitGuard, PermitPulse and CFD are services built on it.",
+"fits": "This wiki is organized that way.",
+"connects": [
+"guru"
+],
+"current": "Proposed in February, never formally settled.",
+"status": "check",
+"owner": "",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "GURU is the one product"
+},
+"d-layer": {
+"id": "d-layer",
+"title": "Ingest automatically, browse visually",
+"company": "all",
+"kind": "decision",
+"parent": "decisions",
+"what": "Oct 2 2026, Kriss and Anton: pull from Drive, transcripts and Slack automatically, link it once with a strong model, answer searches with a cheaper one, show a visual map. Allan asked for a live prototype.",
+"fits": "This demo is that prototype's front end.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "Kriss and Anton working session, Oct 2",
+"u": "https://app.fireflies.ai/view/01M3Y7WGPBX2CYT2P00BE091ZY"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Ingest automatically, browse visually"
+},
+"q-people": {
+"id": "q-people",
+"title": "Written by people or generated?",
+"company": "all",
+"kind": "question",
+"parent": "decisions",
+"what": "Allan wants both: automatic ingestion plus everyone registering their work. Generated content needs an error check; Fireflies summaries have invented technical details before.",
+"fits": "",
+"connects": [],
+"current": "",
+"status": "open",
+"owner": "",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Written by people or generated?"
+},
+"q-access": {
+"id": "q-access",
+"title": "How do we keep companies separate?",
+"company": "all",
+"kind": "question",
+"parent": "decisions",
+"what": "Tam Fortis people see Tam Fortis material; people in more than one company see both through one login. Nobody has proposed how yet.",
+"fits": "Try the View as switch at the top of this wiki.",
+"connects": [],
+"current": "",
+"status": "open",
+"owner": "",
+"sources": [
+{
+"t": "AI Standup, Oct 2, 33:14",
+"u": "https://app.fireflies.ai/view/01M3CJNQ29A6QZMVKMJ3ATF6JF"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "How do we keep companies separate?"
+},
+"q-owner": {
+"id": "q-owner",
+"title": "Who owns the content?",
+"company": "all",
+"kind": "question",
+"parent": "decisions",
+"what": "The wiki passed through admin staff, Ryland and Ayesha, TheSystemsBoss, Anton, Kriss and Ion. Nobody owns it today.",
+"fits": "Proposal: one keeper per system page, named on the page.",
+"connects": [],
+"current": "",
+"status": "open",
+"owner": "",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Who owns the content?"
+},
+"glossary": {
+"id": "glossary",
+"title": "Glossary",
+"company": "all",
+"kind": "section",
+"parent": "home",
+"what": "The words the team uses, in plain language.",
+"fits": "Taken from the MSBAI Technical Glossary in ClickUp.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [
+{
+"t": "MSBAI Technical Glossary (ClickUp)",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-51691/k5w9v-69731"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Glossary"
+},
+"w-tasks": {
+"id": "w-tasks",
+"title": "How a task is born and closed",
+"company": "all",
+"kind": "process",
+"parent": "work",
+"what": "Every task starts somewhere (a meeting, an email, a Slack thread, a gap on a wiki page) and ends checked off, with proof. This is the one path, so nobody has to remember where something went.",
+"fits": "Tasks live in ClickUp. Your desk list in the widget is your view of them, kept in sync both ways.",
+"connects": [
+"w-streams",
+"w-meetings",
+"w-clickup"
+],
+"current": "",
+"status": "current",
+"owner": "Ryland",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"steps": [
+"A call starts from the widget's Create Meet. Fireflies joins and records it.",
+"Atlas (OpenClaw) writes the meeting brief into the Meeting Briefs space and creates the tasks in Goals & Workstreams, in the right workstream list, tagged atlas. Anything it cannot place goes to that program's 01 Inbox / Untriaged.",
+"The widget's Workstreams view reads the same meetings, draws which streams moved, and checks your own steps against ClickUp, Slack and your sent mail so finished work stops glowing.",
+"Your tasks show on the desk list. Each one synced with ClickUp carries its ClickUp link.",
+"Check it off on the desk. The ClickUp task closes on the next sync.",
+"If the work changed what the company knows, register it on its wiki page."
+],
+"rules": [
+"One owner per task, named.",
+"Start the title with a verb.",
+"Put it in a workstream list, never only in a chat.",
+"Link the source: the meeting, email or thread it came from.",
+"Tags: atlas means OpenClaw made it, goal means it is an outcome in 00 Goals, focus-now means this week, untriaged means it still needs a home."
+],
+"links": [
+{
+"k": "clickup",
+"t": "Goals & Workstreams space",
+"u": "https://app.clickup.com/20115771/v/s/90114201246"
+},
+{
+"k": "clickup",
+"t": "Meeting Briefs space",
+"u": "https://app.clickup.com/20115771/v/s/90114263093"
+},
+{
+"k": "slack",
+"t": "#meeting-summaries",
+"u": "https://msbai.slack.com/archives/C0BQDD6FKTN"
+},
+{
+"k": "clickup",
+"t": "Project Management & ClickUp Rollout",
+"u": "https://app.clickup.com/20115771/v/li/901114113996"
+}
+],
+"lists": [
+"901114113996"
+],
+"folders": [],
+"find": "task"
+},
+"w-streams": {
+"id": "w-streams",
+"title": "Workstreams",
+"company": "all",
+"kind": "process",
+"parent": "work",
+"what": "A workstream is one line of work with one ClickUp list, for example SU2 Validation & Hypersonic Cases or PermitPulse. Goals & Workstreams has a folder per program, and every folder has 00 Goals and 01 Inbox / Untriaged plus one list per workstream.",
+"fits": "Wiki pages name their workstream, so a page shows the live work on it and the Workstreams tab opens straight to that stream.",
+"connects": [
+"w-tasks",
+"programs"
+],
+"current": "",
+"status": "current",
+"owner": "Ryland",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"steps": [
+"A goal is written in the program's 00 Goals list: the outcome, an owner, a date when there is one.",
+"Each task goes in the workstream list it moves forward.",
+"New work with no home lands in 01 Inbox / Untriaged until someone places it.",
+"The Workstreams tab draws streams branching, merging and finishing from the meetings, newest at the bottom.",
+"When a stream finishes or merges, its wiki page records what was decided and where the result lives."
+],
+"rules": [
+"Stream names match the ClickUp list names exactly, so links never break.",
+"Proposed: a stream with no movement in three weeks comes up at the Monday meeting."
+],
+"links": [
+{
+"k": "clickup",
+"t": "Goals & Workstreams space",
+"u": "https://app.clickup.com/20115771/v/s/90114201246"
+},
+{
+"k": "clickup",
+"t": "MSBAI · Phase III HPCMP (CFD)",
+"u": "https://app.clickup.com/20115771/v/f/90118135056"
+},
+{
+"k": "clickup",
+"t": "MSBAI · Phase I NASA (MBE GURU)",
+"u": "https://app.clickup.com/20115771/v/f/90118135057"
+},
+{
+"k": "clickup",
+"t": "MSBAI · Phase II OrbitGuard (CDAO)",
+"u": "https://app.clickup.com/20115771/v/f/90118135060"
+},
+{
+"k": "clickup",
+"t": "MSBAI · Cross Cutting",
+"u": "https://app.clickup.com/20115771/v/f/90118135058"
+},
+{
+"k": "clickup",
+"t": "Tam Fortis",
+"u": "https://app.clickup.com/20115771/v/f/90118135097"
+},
+{
+"k": "clickup",
+"t": "Nexcavate",
+"u": "https://app.clickup.com/20115771/v/f/90118135098"
+}
+],
+"lists": [],
+"folders": [],
+"find": "workstream"
+},
+"w-clickup": {
+"id": "w-clickup",
+"title": "Where things live in ClickUp",
+"company": "all",
+"kind": "process",
+"parent": "work",
+"what": "One map of the ClickUp workspace, so anyone (and any agent) knows where to put something and where to look for it.",
+"fits": "When this wiki moves into ClickUp, it becomes the Wiki space's front page.",
+"connects": [
+"w-tasks",
+"w-streams"
+],
+"current": "",
+"status": "current",
+"owner": "Ryland",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"steps": [
+"Goals & Workstreams: goals, tasks and inboxes for every program. The place work is tracked.",
+"Meeting Briefs: one brief per meeting, by month, written by Atlas.",
+"Proposals: Opportunity Pipeline, Proposals In progress, Monthly Proposals & Submissions, the master list, events.",
+"CRM and CRM v3: contacts, relationships and email history.",
+"Wiki: the MSBAI Knowledge Base and, in the full build, this wiki.",
+"Documentation: the 2023 to 2024 engineering wiki, SOPs, HPC and ParaView docs. Evidence now, not a home.",
+"SSOT: the Tam Fortis Microreactor SSOT.",
+"OpenClaw: the OpenClaw handbook and its own work.",
+"GURU Gen 2 (Dev), Learning Engine (Dev), Registry (Dev), Supercomputer: engineering spaces."
+],
+"rules": [
+"Proposed: track work only in Goals & Workstreams.",
+"Proposed: write knowledge on wiki pages, not in task comments.",
+"Proposed: link Drive files instead of uploading copies."
+],
+"links": [
+{
+"k": "clickup",
+"t": "Goals & Workstreams space",
+"u": "https://app.clickup.com/20115771/v/s/90114201246"
+},
+{
+"k": "clickup",
+"t": "Meeting Briefs space",
+"u": "https://app.clickup.com/20115771/v/s/90114263093"
+},
+{
+"k": "clickup",
+"t": "Proposals space",
+"u": "https://app.clickup.com/20115771/v/s/90110367357"
+},
+{
+"k": "clickup",
+"t": "CRM space",
+"u": "https://app.clickup.com/20115771/v/s/90114024653"
+},
+{
+"k": "clickup",
+"t": "CRM v3 space",
+"u": "https://app.clickup.com/20115771/v/s/90115186193"
+},
+{
+"k": "clickup",
+"t": "Wiki space",
+"u": "https://app.clickup.com/20115771/v/s/90114041591"
+},
+{
+"k": "clickup",
+"t": "Documentation space",
+"u": "https://app.clickup.com/20115771/v/s/90110097723"
+},
+{
+"k": "clickup",
+"t": "SSOT space",
+"u": "https://app.clickup.com/20115771/v/s/90114195400"
+},
+{
+"k": "clickup",
+"t": "OpenClaw space",
+"u": "https://app.clickup.com/20115771/v/s/90114178977"
+},
+{
+"k": "clickup",
+"t": "GURU Gen 2 (Dev) space",
+"u": "https://app.clickup.com/20115771/v/s/90113932521"
+},
+{
+"k": "clickup",
+"t": "Supercomputer space",
+"u": "https://app.clickup.com/20115771/v/s/90114082928"
+}
+],
+"lists": [],
+"folders": [],
+"find": "ClickUp"
+},
+"w-email": {
+"id": "w-email",
+"title": "Email and outreach",
+"company": "all",
+"kind": "process",
+"parent": "work",
+"what": "How email gets answered and how outreach is run and logged, so no thread is lost and every contact has a history.",
+"fits": "The widget's Emails tab and the OpenClaw CRM share the same rules.",
+"connects": [
+"w-proposals",
+"w-writing"
+],
+"current": "",
+"status": "current",
+"owner": "Ryland",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"steps": [
+"The Emails tab lists threads waiting on you and suggests a reply using Gmail, Slack, ClickUp and Drive for context.",
+"You edit the suggestion or give a one line note; the reply is saved as a Gmail draft. Nothing is sent for you.",
+"Anything Ayesha sends, receives or is copied on goes to the OpenClaw mailbox and is logged on the contact in the ClickUp CRM.",
+"Outreach replies are tracked in the Email Response Tracker list in Proposals.",
+"A reply that asks for work becomes a task in the right workstream."
+],
+"rules": [
+"Sign as Ryland Adams, MSBAI.",
+"Plain language, the ask first.",
+"Describe customer interest only as documented interest, participation or a potential path.",
+"Link documents instead of attaching them when the reader has access."
+],
+"links": [
+{
+"k": "slack",
+"t": "#email-triage",
+"u": "https://msbai.slack.com/archives/C0B67A65D6F"
+},
+{
+"k": "slack",
+"t": "#openclaw-crm",
+"u": "https://msbai.slack.com/archives/C0AU2G7NM5L"
+},
+{
+"k": "clickup",
+"t": "CRM space",
+"u": "https://app.clickup.com/20115771/v/s/90114024653"
+},
+{
+"k": "clickup",
+"t": "CRM v3 space",
+"u": "https://app.clickup.com/20115771/v/s/90115186193"
+},
+{
+"k": "clickup",
+"t": "Email Response Tracker",
+"u": "https://app.clickup.com/20115771/v/li/901113291308"
+}
+],
+"lists": [],
+"folders": [],
+"find": "outreach"
+},
+"w-proposals": {
+"id": "w-proposals",
+"title": "Proposal building",
+"company": "all",
+"kind": "process",
+"parent": "work",
+"what": "From an opportunity to a submitted proposal, and what we keep afterwards so the next one is faster.",
+"fits": "Past proposals and reviewer feedback are the Past work section of this wiki.",
+"connects": [
+"p-proposals",
+"w-writing"
+],
+"current": "",
+"status": "current",
+"owner": "Ayesha",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"steps": [
+"Opportunities arrive in the Opportunity Pipeline (generated agency workflows, DSIP, BizDev from Slack).",
+"A go decision moves it to Proposals In progress, with a due date and owner.",
+"Drafts follow the Proposal Document Generation Standard (OpenClaw) and live in Drive under Proposals 2026.",
+"Before it goes out: an internal audit in four parts, WE SAID, WE DID, THE GAP, FIX.",
+"Submitted proposals are logged in Monthly Proposals & Submissions, then filed as selected or not selected with the reviewer feedback."
+],
+"rules": [
+"No figure appears externally without source confirmation from Abdul or Anton.",
+"Background IP (GURU, trained models) stays MSBAI background IP.",
+"Reuse the paper and architecture categories in this wiki for technical volumes."
+],
+"links": [
+{
+"k": "slack",
+"t": "#bizdev",
+"u": "https://msbai.slack.com/archives/C01SQDMFLGH"
+},
+{
+"k": "slack",
+"t": "#proposals",
+"u": "https://msbai.slack.com/archives/C0245QBBNMN"
+},
+{
+"k": "clickup",
+"t": "Proposals space",
+"u": "https://app.clickup.com/20115771/v/s/90110367357"
+},
+{
+"k": "clickup",
+"t": "Monthly Proposals & Submissions",
+"u": "https://app.clickup.com/20115771/v/li/901114418813"
+},
+{
+"k": "clickup",
+"t": "Import, MASTER Proposal List",
+"u": "https://app.clickup.com/20115771/v/li/901103915833"
+},
+{
+"k": "clickup",
+"t": "Proposal Document Generation Standard (OpenClaw)",
+"u": "https://app.clickup.com/20115771/v/li/901114380622"
+},
+{
+"k": "drive",
+"t": "Proposals 2026",
+"u": "https://drive.google.com/drive/folders/1qgOrOlFFCvGVNg45WvF0cUndPsORSDEF"
+},
+{
+"k": "drive",
+"t": "Proposal Writing (OpenClaw)",
+"u": "https://drive.google.com/drive/folders/1547qDUXjVZc4-35Eok6TkyAy8h0eZM2w"
+}
+],
+"lists": [
+"901114113994"
+],
+"folders": [],
+"find": "proposal"
+},
+"w-writing": {
+"id": "w-writing",
+"title": "Writing rules",
+"company": "all",
+"kind": "process",
+"parent": "work",
+"what": "The house style for anything written for MSBAI, Tam Fortis or Nexcavate, by a person or an agent.",
+"fits": "Kriss proposed on Oct 2 that OpenClaw enforce these with one shared terms library checked after every response.",
+"connects": [
+"glossary",
+"w-openclaw"
+],
+"current": "",
+"status": "current",
+"owner": "Ryland",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"steps": [],
+"rules": [
+"Write GURU in all caps, every time. Allan's rule.",
+"No em dashes, en dashes or hyphens used as connectors.",
+"Plain language. Bottom line first.",
+"Slack: one message, saved as a draft to check before sending. Mention people with @, no bold name beside it. Caps section headers instead of bold.",
+"Spell team names right; the glossary is the reference."
+],
+"links": [
+{
+"k": "slack",
+"t": "#bizdev",
+"u": "https://msbai.slack.com/archives/C01SQDMFLGH"
+}
+],
+"lists": [],
+"folders": [],
+"find": "style"
+},
+"w-meetings": {
+"id": "w-meetings",
+"title": "Meetings",
+"company": "all",
+"kind": "process",
+"parent": "work",
+"what": "How a meeting is set up, recorded and turned into work.",
+"fits": "Feeds How a task is born and closed.",
+"connects": [
+"w-tasks"
+],
+"current": "",
+"status": "current",
+"owner": "Ryland",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"steps": [
+"Start the call from the widget: Create Meet, pick Meet or Zoom, name it, tick teammates. They get the link by Slack DM and Fireflies joins.",
+"Twenty five minutes before a calendar meeting the widget builds a prep card from past meetings, Slack, Drive and tasks.",
+"After the call, Atlas writes the brief to Meeting Briefs and creates the tasks.",
+"Decisions made in the meeting are registered on the wiki page they change."
+],
+"rules": [
+"Action items name a person.",
+"Proposed: every working session is recorded."
+],
+"links": [
+{
+"k": "clickup",
+"t": "Meeting Briefs space",
+"u": "https://app.clickup.com/20115771/v/s/90114263093"
+},
+{
+"k": "slack",
+"t": "#meeting-summaries",
+"u": "https://msbai.slack.com/archives/C0BQDD6FKTN"
+}
+],
+"lists": [],
+"folders": [],
+"find": "meeting"
+},
+"w-openclaw": {
+"id": "w-openclaw",
+"title": "What OpenClaw takes from this wiki",
+"company": "all",
+"kind": "process",
+"parent": "work",
+"what": "The wiki is the map OpenClaw works from. Each part of it answers a question an agent would otherwise guess at.",
+"fits": "Atlas already creates the tasks and briefs; this page is what it should read first.",
+"connects": [
+"w-tasks",
+"w-writing"
+],
+"current": "",
+"status": "current",
+"owner": "Kriss (proposed)",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"steps": [
+"Where does this belong? The page tree. Every page names its company and its place in the system.",
+"Who should see it? The keeper on the page.",
+"Where does the task go? The workstream list named on the page.",
+"How should it read? Writing rules, enforced after every response.",
+"Can we say this externally? The claim rules on Proposal building.",
+"What is stale? Pages marked Needs a check or Out of date get refreshed first."
+],
+"rules": [
+"Proposed: agents propose changes to pages and keepers approve them.",
+"Proposed: agents never overwrite a person's text."
+],
+"links": [
+{
+"k": "slack",
+"t": "#openclaw-assistant",
+"u": "https://msbai.slack.com/archives/C0ASY03CERE"
+},
+{
+"k": "slack",
+"t": "#openclaw-logs",
+"u": "https://msbai.slack.com/archives/C0B40PG41K9"
+},
+{
+"k": "clickup",
+"t": "OpenClaw space",
+"u": "https://app.clickup.com/20115771/v/s/90114178977"
+},
+{
+"k": "clickup",
+"t": "OpenClaw Docs",
+"u": "https://app.clickup.com/20115771/docs/k5w9v-54891"
+},
+{
+"k": "clickup",
+"t": "OpenClaw Automations",
+"u": "https://app.clickup.com/20115771/v/li/901114113997"
+}
+],
+"lists": [
+"901114113997"
+],
+"folders": [],
+"find": "OpenClaw"
+},
+"about": {
+"id": "about",
+"title": "About this wiki",
+"company": "all",
+"kind": "section",
+"parent": "home",
+"what": "What Allan asked for, what this wiki does about it, and what is left.",
+"fits": "Allan, June 11: a wiki of top level stuff and a lot of detail on each product, service and technology, so we stop arguing about what we thought it was.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [
+"a-asks",
+"a-needs",
+"a-tests"
+],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "About this wiki"
+},
+"a-asks": {
+"id": "a-asks",
+"title": "What Allan asked for",
+"company": "all",
+"kind": "overview",
+"parent": "about",
+"what": "Three jobs. Find what we already wrote. A living reference everyone adds to. A layered system view of GURU and the reactor where you can open any part and go back up.",
+"fits": "From about 60 meetings since April 2024. He set the bar himself: someone new is not immediately lost, it works on a phone, and something lost is found live in a meeting.",
+"connects": [],
+"current": "One starting page per company; reuse the categories in our papers; Google Docs stay but are linked from the wiki; it must not depend on naming conventions; it must not become a chore.",
+"status": "current",
+"owner": "Ryland",
+"sources": [
+{
+"t": "The Company Wiki: What Allan Wants, What Exists, and the Gap",
+"u": "https://docs.google.com/document/d/1p5e0p3diVH8GM-dKsmu0vLUu8cfEDaDB8hnAxpz3I-k/edit"
+},
+{
+"t": "Company Wiki: Build Spec and Working Demo",
+"u": "https://docs.google.com/document/d/1krTCDyDMsbl37pD-tQ75Tqs8cLYKKn8_ZGahrDHF6jI/edit"
+},
+{
+"t": "AI Standup, Oct 2",
+"u": "https://app.fireflies.ai/view/01M3CJNQ29A6QZMVKMJ3ATF6JF"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"links": [],
+"lists": [],
+"folders": [],
+"find": "What Allan asked for"
+},
+"a-needs": {
+"id": "a-needs",
+"title": "Ryland's needs list, checked",
+"company": "all",
+"kind": "overview",
+"parent": "about",
+"what": "The 19 points from Feb 19, each marked with where it stands in this build.",
+"fits": "Works now means you can use it in this wiki today. Designed means it is in the build spec. Partly, Later and Open are what they say.",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "Ryland",
+"sources": [
+{
+"t": "Click Up Wiki Needs 2/19/26",
+"u": "https://docs.google.com/document/d/1u1ZY1AyRvq9sp1z7QLGtTF0f7dBuVoHs47RVkWe355Q/edit"
+},
+{
+"t": "MSBAI ClickUp Wiki Structure (drawio)",
+"u": "https://drive.google.com/file/d/1L4OTFwKVi7IjLODuordQR54Q8tG1Un3m/view"
+}
+],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"checks": [
+{
+"t": "One source of truth for every part and how parts connect",
+"s": "demo"
+},
+{
+"t": "End dark room work: everyone's work visible and shared",
+"s": "partial"
+},
+{
+"t": "Visual, interactive view of every platform element and its connections",
+"s": "demo"
+},
+{
+"t": "Layered: high level map, drill down to detail",
+"s": "demo"
+},
+{
+"t": "Anyone can read and update it",
+"s": "spec"
+},
+{
+"t": "Version history: what changed, when, by whom",
+"s": "spec"
+},
+{
+"t": "Linked to GitLab",
+"s": "later"
+},
+{
+"t": "Linked to ClickUp tasks: who is working on what",
+"s": "demo"
+},
+{
+"t": "Same structure for GURU and the microreactor",
+"s": "demo"
+},
+{
+"t": "Shared goals: everyone works from the same picture",
+"s": "demo"
+},
+{
+"t": "Automation keeps it current",
+"s": "spec"
+},
+{
+"t": "Connected to task management across both projects",
+"s": "demo"
+},
+{
+"t": "Visually intuitive, no digging through menus",
+"s": "demo"
+},
+{
+"t": "One overview page from top level to small pieces",
+"s": "demo"
+},
+{
+"t": "A living wiki that sends reminders and flags stale sections",
+"s": "spec"
+},
+{
+"t": "Slack: wiki messages link back to the page",
+"s": "partial"
+},
+{
+"t": "Dashboard of cross system test status in ClickUp",
+"s": "later"
+},
+{
+"t": "Working session with Anton and Kyrylo on the major buckets",
+"s": "open"
+},
+{
+"t": "Bring Olivia and Kendra up to speed",
+"s": "open"
+}
+],
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Ryland's needs list, checked"
+},
+"a-tests": {
+"id": "a-tests",
+"title": "Allan's tests",
+"company": "all",
+"kind": "overview",
+"parent": "about",
+"what": "The bar the wiki has to clear before Allan sees it.",
+"fits": "",
+"connects": [],
+"current": "",
+"status": "current",
+"owner": "Ryland",
+"sources": [],
+"questions": [],
+"terms": [],
+"stream": "",
+"children": [],
+"updated": "2026-10-04",
+"checks": [
+{
+"t": "Outsider test: someone new gets an overview of GURU and the reactor and finds three named things alone",
+"s": "open"
+},
+{
+"t": "Three clicks: the GURU definition and the reactor core from the start page (two in this demo)",
+"s": "demo"
+},
+{
+"t": "Phone test: Stash, Robert and Molly use it on a phone",
+"s": "later"
+},
+{
+"t": "Meeting test: something lost is found live in a meeting",
+"s": "partial"
+},
+{
+"t": "Short pages: no page needs scrolling to find its point",
+"s": "demo"
+}
+],
+"links": [],
+"lists": [],
+"folders": [],
+"find": "Allan's tests"
+}
+},
+"glossary": [
+{
+"t": "AFRL",
+"d": "Air Force Research Laboratory; runs a DSRC where GURU was demonstrated."
+},
+{
+"t": "ALCC",
+"d": "DOE leadership computing challenge; MSBAI's allocation on Frontier and Aurora."
+},
+{
+"t": "Anomaly detection",
+"d": "Finding deviations from a baseline in satellites, simulations or reactors."
+},
+{
+"t": "Aurora",
+"d": "DOE exascale system at Argonne."
+},
+{
+"t": "AutoML",
+"d": "Automated model selection and tuning; part of the Learning Engine."
+},
+{
+"t": "Blackboard",
+"d": "Shared memory where agents post findings and partial solutions."
+},
+{
+"t": "Brayton cycle",
+"d": "The sCO2 power cycle the Tam Fortis turbine uses."
+},
+{
+"t": "CIL",
+"d": "Common Internal Language: GURU's shared, typed, unit aware message language."
+},
+{
+"t": "CFD",
+"d": "Computational fluid dynamics; core GURU automation area."
+},
+{
+"t": "Digital twin",
+"d": "A simulation of the reactor used to test configurations and watch health."
+},
+{
+"t": "DOME",
+"d": "INL's microreactor test bed; Tam Fortis has a 2028 slot."
+},
+{
+"t": "DSRC",
+"d": "DoD Supercomputing Resource Center, part of HPCMP."
+},
+{
+"t": "FCM",
+"d": "Fully ceramic microencapsulated fuel; Tam Fortis uses it with HALEU."
+},
+{
+"t": "Frontier",
+"d": "ORNL exascale system; MSBAI runs 2,000+ node jobs there."
+},
+{
+"t": "Global Workspace Theory",
+"d": "The cognitive theory GURU's architecture borrows from."
+},
+{
+"t": "GURU",
+"d": "MSBAI's hybrid intelligence platform that drives expert workflows in software."
+},
+{
+"t": "HALEU",
+"d": "Uranium enriched to 5 to 20 percent U 235."
+},
+{
+"t": "HPCMP",
+"d": "DoD High Performance Computing Modernization Program; primary GURU Gen 2 customer."
+},
+{
+"t": "Hybrid intelligence",
+"d": "Symbolic reasoning plus machine learning; MSBAI's core idea."
+},
+{
+"t": "JEPA",
+"d": "Joint embedding predictive architecture; predicts in representation space."
+},
+{
+"t": "Learning Engine",
+"d": "GURU's agent factory: trains, compares and registers models."
+},
+{
+"t": "Microreactor",
+"d": "Tam Fortis units from 15 W to 40 kW for off grid power."
+},
+{
+"t": "MQTT",
+"d": "The publish and subscribe protocol under the global workspace."
+},
+{
+"t": "Neuro symbolic",
+"d": "Neural networks plus symbolic rules in one system."
+},
+{
+"t": "OrbitGuard",
+"d": "Space domain awareness copilot built on GURU."
+},
+{
+"t": "ParaView",
+"d": "Visualization tool GURU drives for post processing."
+},
+{
+"t": "PermitPulse",
+"d": "Nexcavate's AI copilot for mining permits."
+},
+{
+"t": "Phase I, II, III",
+"d": "SBIR and STTR stages; Phase III allows sole source awards."
+},
+{
+"t": "PWA",
+"d": "Progressive web app; GURU's interface on any device."
+},
+{
+"t": "Rules engine",
+"d": "GURU's deterministic checker for units, limits and contracts."
+},
+{
+"t": "SDA TAP Lab",
+"d": "Space Force prototyping lab where OrbitGuard was demonstrated."
+},
+{
+"t": "SSOT",
+"d": "Single source of truth; the governed store of design values."
+},
+{
+"t": "SU2",
+"d": "Open source CFD solver GURU runs."
+},
+{
+"t": "UDL",
+"d": "DoD Unified Data Library; OrbitGuard reads from it."
+}
+],
+"maps": {
+"guru": {
+"vb": [
+100,
+72
+],
+"nodes": [
+{
+"id": "svc-orbitguard",
+"x": 14,
+"y": 1,
+"w": 17,
+"h": 5,
+"shape": "pill",
+"label": "OrbitGuard"
+},
+{
+"id": "svc-cfd",
+"x": 32.5,
+"y": 1,
+"w": 17,
+"h": 5,
+"shape": "pill",
+"label": "CFD automation"
+},
+{
+"id": "svc-mbe",
+"x": 51,
+"y": 1,
+"w": 17,
+"h": 5,
+"shape": "pill",
+"label": "MBE GURU"
+},
+{
+"id": "permitpulse",
+"x": 69.5,
+"y": 1,
+"w": 16.5,
+"h": 5,
+"shape": "pill",
+"label": "PermitPulse"
+},
+{
+"id": "g-ui",
+"x": 14,
+"y": 10,
+"w": 72,
+"h": 8,
+"label": "User interface",
+"sub": "PWA on phone, tablet, desktop, AR"
+},
+{
+"id": "g-gw",
+"x": 14,
+"y": 23,
+"w": 72,
+"h": 9,
+"label": "Global workspace",
+"sub": "message pool, blackboard, attention"
+},
+{
+"id": "g-agents",
+"x": 14,
+"y": 36,
+"w": 72,
+"h": 16,
+"label": "Agent society",
+"sub": "",
+"group": true
+},
+{
+"id": "g-plan",
+"x": 16.5,
+"y": 42,
+"w": 21.5,
+"h": 7.5,
+"label": "Planning",
+"sub": "multi step plans"
+},
+{
+"id": "g-act",
+"x": 39.25,
+"y": 42,
+"w": 21.5,
+"h": 7.5,
+"label": "Action",
+"sub": "bounded decisions"
+},
+{
+"id": "g-nav",
+"x": 62,
+"y": 42,
+"w": 21.5,
+"h": 7.5,
+"label": "Navigation",
+"sub": "drive the software"
+},
+{
+"id": "g-exec",
+"x": 14,
+"y": 57,
+"w": 72,
+"h": 8,
+"label": "Execution environment",
+"sub": "cloud, supercomputers, local"
+},
+{
+"id": "g-learn",
+"x": 1,
+"y": 23,
+"w": 11,
+"h": 29,
+"label": "Learning\nEngine",
+"sub": "agent\nfactory",
+"tall": true
+},
+{
+"id": "g-data",
+"x": 1,
+"y": 57,
+"w": 11,
+"h": 8,
+"label": "Data\nfactory"
+},
+{
+"id": "g-cil",
+"x": 88,
+"y": 10,
+"w": 11,
+"h": 42,
+"label": "CIL\nand\nrules",
+"sub": "checks\nevery\naction",
+"tall": true
+},
+{
+"id": "g-tooling",
+"x": 14,
+"y": 67,
+"w": 72,
+"h": 4.5,
+"shape": "strip",
+"label": "Tooling and infrastructure"
+}
+],
+"links": [
+{
+"a": [
+50,
+18
+],
+"b": [
+50,
+23
+],
+"k": "msg"
+},
+{
+"a": [
+50,
+32
+],
+"b": [
+50,
+36
+],
+"k": "msg"
+},
+{
+"a": [
+50,
+52
+],
+"b": [
+50,
+57
+],
+"k": "msg"
+},
+{
+"a": [
+12,
+44
+],
+"b": [
+16.5,
+45.7
+],
+"k": "train"
+},
+{
+"a": [
+6.5,
+57
+],
+"b": [
+6.5,
+52
+],
+"k": "train"
+},
+{
+"a": [
+86,
+27.5
+],
+"b": [
+88,
+27.5
+],
+"k": "check"
+},
+{
+"a": [
+83.5,
+45.7
+],
+"b": [
+88,
+45.7
+],
+"k": "check"
+},
+{
+"a": [
+38,
+45.7
+],
+"b": [
+39.25,
+45.7
+],
+"k": "msg"
+},
+{
+"a": [
+60.75,
+45.7
+],
+"b": [
+62,
+45.7
+],
+"k": "msg"
+},
+{
+"a": [
+50,
+6
+],
+"b": [
+50,
+10
+],
+"k": "msg"
+}
+]
+},
+"reactor": {
+"vb": [
+100,
+64
+],
+"nodes": [
+{
+"id": "r-structure",
+"x": 1,
+"y": 1,
+"w": 98,
+"h": 62,
+"shape": "frame",
+"label": "Structure and shielding"
+},
+{
+"id": "r-autonomy",
+"x": 70,
+"y": 4,
+"w": 26,
+"h": 6,
+"shape": "pill",
+"label": "Autonomy and digital twin"
+},
+{
+"id": "r-drums",
+"shape": "ring",
+"cx": 22,
+"cy": 35,
+"r": 17,
+"r0": 13,
+"label": "Control drums",
+"lx": 22,
+"ly": 59
+},
+{
+"id": "r-core",
+"shape": "core",
+"cx": 22,
+"cy": 35,
+"r": 12.5,
+"label": "Core"
+},
+{
+"id": "r-heatpipes",
+"x": 36,
+"y": 25,
+"w": 12,
+"h": 20,
+"shape": "pipes",
+"label": "Heat pipes"
+},
+{
+"id": "r-hx",
+"x": 48,
+"y": 26,
+"w": 13,
+"h": 18,
+"label": "Heat\nexchanger",
+"sub": "PCHE"
+},
+{
+"id": "r-turbine",
+"x": 65,
+"y": 26,
+"w": 14,
+"h": 18,
+"label": "Turbine\ngenerator",
+"sub": "sCO2 Brayton"
+},
+{
+"id": "r-power",
+"x": 83,
+"y": 26,
+"w": 13,
+"h": 18,
+"label": "Power\nelectronics",
+"sub": "480 V AC\n28 V DC"
+},
+{
+"id": "r-cooling",
+"x": 65,
+"y": 50,
+"w": 14,
+"h": 9,
+"label": "Dry cooler"
+}
+],
+"links": [
+{
+"a": [
+61,
+31
+],
+"b": [
+65,
+31
+],
+"k": "heat"
+},
+{
+"a": [
+65,
+39
+],
+"b": [
+61,
+39
+],
+"k": "cold"
+},
+{
+"a": [
+72,
+44
+],
+"b": [
+72,
+50
+],
+"k": "heat"
+},
+{
+"a": [
+79,
+35
+],
+"b": [
+83,
+35
+],
+"k": "power"
+},
+{
+"a": [
+96,
+35
+],
+"b": [
+99,
+35
+],
+"k": "power"
+}
+],
+"subs": {
+"r-core": [
+{
+"id": "r-fuel",
+"label": "Fuel pins"
+},
+{
+"id": "r-moderator",
+"label": "Moderator"
+}
+]
+}
+},
+"permitpulse": {
+"vb": [
+100,
+40
+],
+"nodes": [
+{
+"id": "pp-intake",
+"x": 1,
+"y": 12,
+"w": 17,
+"h": 12,
+"label": "Documents\nin"
+},
+{
+"id": "pp-assemble",
+"x": 21,
+"y": 12,
+"w": 18,
+"h": 12,
+"label": "Assemble\napplication"
+},
+{
+"id": "pp-check",
+"x": 42,
+"y": 12,
+"w": 18,
+"h": 12,
+"label": "Check against\nregulation"
+},
+{
+"id": "pp-audit",
+"x": 63,
+"y": 12,
+"w": 16,
+"h": 12,
+"label": "Audit\ntrail"
+},
+{
+"id": "pp-agency",
+"x": 82,
+"y": 12,
+"w": 17,
+"h": 12,
+"label": "Agency\nreview"
+},
+{
+"id": "n-pulse",
+"x": 1,
+"y": 30,
+"w": 22,
+"h": 6,
+"shape": "pill",
+"label": "Pulse Extract"
+},
+{
+"id": "guru",
+"x": 42,
+"y": 30,
+"w": 18,
+"h": 6,
+"shape": "pill",
+"label": "Runs on GURU?"
+}
+],
+"links": [
+{
+"a": [
+18,
+18
+],
+"b": [
+21,
+18
+],
+"k": "msg"
+},
+{
+"a": [
+39,
+18
+],
+"b": [
+42,
+18
+],
+"k": "msg"
+},
+{
+"a": [
+60,
+18
+],
+"b": [
+63,
+18
+],
+"k": "msg"
+},
+{
+"a": [
+79,
+18
+],
+"b": [
+82,
+18
+],
+"k": "msg"
+},
+{
+"a": [
+51,
+30
+],
+"b": [
+51,
+24
+],
+"k": "check"
+}
+]
+}
+},
+"inbox": [
+{
+"who": "Ion",
+"when": "2026-09-04",
+"text": "ParaView node restart steps",
+"to": "h-paraview",
+"state": "waiting for steps"
+},
+{
+"who": "Ryland",
+"when": "2026-10-02",
+"text": "Kestrel tutorial collection link",
+"to": "h-kestrel",
+"state": "waiting for link"
+}
+],
+"sections": [
+"work",
+"past",
+"decisions",
+"glossary",
+"about"
+],
+"lists": {
+"901114113984": {
+"name": "00 Goals",
+"folder": "90118135056"
+},
+"901114113989": {
+"name": "00 Goals",
+"folder": "90118135057"
+},
+"901114113990": {
+"name": "01 Inbox / Untriaged",
+"folder": "90118135057"
+},
+"901114113992": {
+"name": "00 Goals",
+"folder": "90118135058"
+},
+"901114113993": {
+"name": "01 Inbox / Untriaged",
+"folder": "90118135058"
+},
+"901114114013": {
+"name": "00 Goals",
+"folder": "90118135060"
+},
+"901114114014": {
+"name": "01 Inbox / Untriaged",
+"folder": "90118135060"
+},
+"901114114066": {
+"name": "00 Goals",
+"folder": "90118135097"
+},
+"901114114067": {
+"name": "01 Inbox / Untriaged",
+"folder": "90118135097"
+},
+"901114114075": {
+"name": "01 Inbox / Untriaged",
+"folder": "90118135098"
+},
+"901114113986": {
+"name": "Customer Demos (aerial refueling, store separation)",
+"folder": "90118135056"
+},
+"901114113987": {
+"name": "Kestrel Knowledge Extraction",
+"folder": "90118135056"
+},
+"901114114004": {
+"name": "Kestrel Integration & Training",
+"folder": "90118135056"
+},
+"901114113988": {
+"name": "SU2 Validation & Hypersonic Cases",
+"folder": "90118135056"
+},
+"901114113991": {
+"name": "MBE GURU NASA Phase I (paper, Phase 2 pursuit)",
+"folder": "90118135057"
+},
+"901114114015": {
+"name": "OrbitGuard Space Domain Awareness & Anomaly Detection",
+"folder": "90118135060"
+},
+"901114113994": {
+"name": "BizDev & Proposal Research Pipeline",
+"folder": "90118135058"
+},
+"901114113996": {
+"name": "Project Management & ClickUp Rollout",
+"folder": "90118135058"
+},
+"901114113997": {
+"name": "OpenClaw Automations",
+"folder": "90118135058"
+},
+"901114113998": {
+"name": "Research Papers & Publications (arXiv)",
+"folder": "90118135058"
+},
+"901114113999": {
+"name": "GURU Gen 2 Platform & Architecture",
+"folder": "90118135058"
+},
+"901114114000": {
+"name": "HPC Operations (Aurora, Frontier, Carpenter, Radar, Warhawk)",
+"folder": "90118135058"
+},
+"901114114001": {
+"name": "TACFI Package",
+"folder": "90118135058"
+},
+"901114114005": {
+"name": "Hiring & Team Growth",
+"folder": "90118135058"
+},
+"901114145046": {
+"name": "GURU ParaView Automation",
+"folder": "90118135058"
+},
+"901114156835": {
+"name": "BMC3I BDA/BDI Pursuit & Team Formation",
+"folder": "90118135058"
+},
+"901114201431": {
+"name": "CFD Workflow Parallelization & Performance",
+"folder": "90118135058"
+},
+"901114201432": {
+"name": "Geometry Synthesis & Dataset Quality",
+"folder": "90118135058"
+},
+"901114201433": {
+"name": "Software Control & Knowledge Graph",
+"folder": "90118135058"
+},
+"901114327892": {
+"name": "Common Internal Language & Agent Blackboard Orchestration",
+"folder": "90118135058"
+},
+"901114327893": {
+"name": "SELF Orchestration, Voice & Common Internal Language",
+"folder": "90118135058"
+},
+"901114327894": {
+"name": "Modeling and Simulation Conference Presentation",
+"folder": "90118135058"
+},
+"901114327895": {
+"name": "Navy Outreach, ANTX, and Fathom Works Participation",
+"folder": "90118135058"
+},
+"901114327931": {
+"name": "SDA D1206 Adaptive Test Planning Proposal",
+"folder": "90118135058"
+},
+"901114338826": {
+"name": "Conjunction-Risk JEPA and RL Evaluation",
+"folder": "90118135058"
+},
+"901114392402": {
+"name": "Crucible Accelerator Cohort Recruitment & Delivery",
+"folder": "90118135058"
+},
+"901114418953": {
+"name": "Monthly Submissions",
+"folder": ""
+},
+"901114114068": {
+"name": "Tam Fortis Fundraising & Investor Outreach",
+"folder": "90118135097"
+},
+"901114114069": {
+"name": "Proposals",
+"folder": "90118135097"
+},
+"901114114070": {
+"name": "Tam Fortis Marketing & BizDev",
+"folder": "90118135097"
+},
+"901114114072": {
+"name": "Microreactor Design Studies (INCITE / ALCC)",
+"folder": "90118135097"
+},
+"901114114073": {
+"name": "Reactor Control Prototype & Digital Twin",
+"folder": "90118135097"
+},
+"901114114071": {
+"name": "Microreactor SSOT (Single Source of Truth)",
+"folder": "90118135097"
+},
+"901114338828": {
+"name": "Advanced Reactor Architecture Exploration",
+"folder": "90118135097"
+},
+"901114338829": {
+"name": "HPC4EI Proposal with Lawrence Livermore",
+"folder": "90118135097"
+},
+"901114338830": {
+"name": "Teneo Proposal",
+"folder": "90118135097"
+},
+"901114114076": {
+"name": "Nexcavate Opportunity Pipeline",
+"folder": "90118135098"
+},
+"901114114077": {
+"name": "PermitPulse (mining permitting & document ingestion)",
+"folder": "90118135098"
+},
+"901114114078": {
+"name": "Nexcavate Investor Readiness",
+"folder": "90118135098"
+},
+"901114338832": {
+"name": "Pulse Extract (mining waste recovery hardware concept)",
+"folder": "90118135098"
+}
+},
+"folders": {
+"90118135056": "MSBAI · Phase III HPCMP (CFD)",
+"90118135057": "MSBAI · Phase I NASA (MBE GURU)",
+"90118135060": "MSBAI · Phase II OrbitGuard (CDAO)",
+"90118135058": "MSBAI · Cross Cutting",
+"90118135097": "Tam Fortis",
+"90118135098": "Nexcavate"
+}
+}

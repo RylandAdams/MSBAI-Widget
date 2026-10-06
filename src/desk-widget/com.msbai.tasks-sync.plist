@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- launchd job for tasks-sync.sh, then clickup-sync.sh (TASKS.md → ClickUp): every 5 minutes (the script skips 10pm–4am, and only
+     calls Claude for a new meeting or when the 30-minute Slack sweep is due).
+     Install:  cp com.msbai.tasks-sync.plist ~/Library/LaunchAgents/ &&
+               launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.msbai.tasks-sync.plist
+     Remove:   launchctl bootout gui/$(id -u)/com.msbai.tasks-sync -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.msbai.tasks-sync</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-c</string>
+    <string>"{{HOME}}/AI Tools/desk-widget/tasks-sync.sh"; "{{HOME}}/AI Tools/desk-widget/clickup-sync.sh"</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>300</integer>
+  <key>RunAtLoad</key>
+  <false/>
+  <key>StandardOutPath</key>
+  <string>{{HOME}}/AI Tools/desk-widget/.tasks-sync/launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>{{HOME}}/AI Tools/desk-widget/.tasks-sync/launchd.log</string>
+</dict>
+</plist>

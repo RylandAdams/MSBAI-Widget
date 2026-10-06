@@ -1,0 +1,4 @@
+# The command an "+ openclaw" terminal tab runs. The first line that is not a comment is used.
+# Examples (replace the host with your OpenClaw VPS's Tailscale name):
+#   ssh -t openclaw-vps "cd ~/openclaw && claude"     Claude on the VPS, inside OpenClaw's folder
+#   ssh -t openclaw-vps "<your OpenClaw TUI command>"   OpenClaw's TUI (Kriss: it writes into the main thread)

@@ -1,0 +1,3 @@
+# Names that are never leads: vendors, portals, tools, mailing lists. One per line.
+Example Vendor Inc
+noreply portal

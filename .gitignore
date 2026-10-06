@@ -1,0 +1,33 @@
+# Never publish an owner's state, keys or personal lists
+config/me.json
+**/.fireflies-key
+**/.gcal-client.json
+**/.gcal-token.json
+**/me.json
+**/team.tsv
+**/crm-seed.tsv
+**/crm-exclude.txt
+**/TASKS.md
+**/rolodex/
+**/transcripts/
+**/.crm/
+**/.flow/
+**/.watch/
+**/.emails/
+**/.emails.tsv
+**/.prep/
+**/.zoom/
+**/.wiki/
+**/.team/
+**/.tasks-sync/
+**/.voice/
+**/.clickup-*
+**/.cal-last
+**/.threads*
+**/.meetings
+**/backups/
+**/vendor/
+**/MSBAI Listen.app/
+__pycache__/
+.DS_Store
+**/CLAUDE.md

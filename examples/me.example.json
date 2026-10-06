@@ -1,0 +1,13 @@
+{
+  "name": "Sam",
+  "full": "Sam Rivera",
+  "aliases": ["Sam", "Sam Rivera", "Sam Riviera"],
+  "slack": "U0XXXXXXXXX",
+  "clickup": "00000000",
+  "email": "sam.rivera@example.com",
+  "role": "systems engineer on the GURU team",
+  "focusBoard": "https://app.clickup.com/20115771/home",
+  "crmWatch": "mine",
+  "crmCc": "bizdev@example.com",
+  "agendaPosterSlack": "U0XXXXXXXXX"
+}
