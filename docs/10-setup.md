@@ -8,6 +8,7 @@ Each teammate gets their own copy, personalized to them: it reads their Slack, G
 - The **Claude desktop app**, and **Claude Code** (`claude` on the command line) signed in with your claude.ai account. Every background job is `claude -p`, so it uses your plan.
 - These **claude.ai connectors** turned on for your account: ClickUp, Slack, Gmail, Google Drive, Google Calendar, Fireflies, Zoom. The jobs call them as `mcp__claude_ai_<Service>__...`; there is no other login.
 - A **Fireflies API key** (fireflies.ai → Settings → Developer Settings).
+- A **ClickUp personal API token** if you will use the CRM (ClickUp → your avatar → Settings → Apps → API Token; it starts with `pk_`).
 - `python3` (comes with the Xcode command line tools) and `zsh` (the macOS default). Nothing to install with pip.
 - Optional: `icalBuddy` (Homebrew) as the calendar fallback.
 
@@ -48,7 +49,7 @@ cp examples/me.example.json config/me.json
 python3 tools/personalize.py config/me.json
 ```
 
-This writes the code to `~/AI Tools/desk-widget/` with your values filled in, copies `me.json` beside it, and starts you with an example `TASKS.md`, `CLAUDE.md`, `team.tsv`, `crm-seed.tsv` and `crm-exclude.txt` (only if you do not have them). Running it again on an existing install needs `--force`, and even then only the code files are replaced: your tasks, notes, Rolodex, state folders and keys are left alone.
+This writes the code to `~/AI Tools/desk-widget/` with your values filled in, copies `me.json` beside it, and starts you with an example `TASKS.md`, `CLAUDE.md`, `team.tsv`, `crm-seed.tsv`, `crm-exclude.txt` and `campaigns.json` (only if you do not have them). Running it again on an existing install needs `--force`, and even then only the code files are replaced: your tasks, notes, Rolodex, state folders and keys are left alone.
 
 **4. Fireflies key.**
 
@@ -58,6 +59,16 @@ chmod 600 ~/"AI Tools/desk-widget/.fireflies-key"
 ```
 
 It is never printed by any script. Keep it out of anything you publish.
+
+**4b. ClickUp token** (for the CRM). The CRM reads ClickUp's REST API with it, GET only, so it does not use up the connector's daily limit.
+
+```bash
+pbpaste > ~/"AI Tools/desk-widget/.clickup-token"   # after copying the token
+chmod 600 ~/"AI Tools/desk-widget/.clickup-token"
+python3 ~/"AI Tools/desk-widget/crm_rest.py" fields   # check: prints the CRM lists' field names
+```
+
+Without it the CRM falls back to the connector every 3 hours. The file is ignored by git and the leak check fails on any `pk_` token.
 
 **5. Show the widget.** Übersicht's widget folder preference does not stick, so link the widget into the folder it actually watches:
 
@@ -98,7 +109,8 @@ The workstreams flow builds itself on the first beat (the last 3 weeks of meetin
 ## Optional
 
 - **OpenClaw tab.** Put the command in `openclaw-cmd` (for example `ssh -t openclaw-vps "cd ~/openclaw && claude"` over Tailscale) and **+ openclaw** opens it.
-- **Layout.** `CFG` at the top of `msbai-desk.widget/index.jsx`: which screen edge, sizes, zoom, the work it lead line and shortcut. Everything else is dragged and remembered.
+- **Layout.** `CFG` at the top of `msbai-desk.widget/index.jsx`: which screen edge, sizes, zoom, the work it lead line and shortcut, `terminal` (off). Everything else is dragged and remembered, and text size, widget size, glass, contrast, tab bar and corners are on the **Settings** page (double click the desk tab).
+- **Campaigns.** Add target lists the CRM does not hold yet to `campaigns.json` (shape in `examples/campaigns.example.json`).
 - **Google Calendar writes.** Off (`CFG.googleApi: false`) because the Workspace org does not allow creating an OAuth client. Replies go through Calendar.app; new events through EventKit.
 - **Schedules and models.** Every interval and model can be changed with an environment variable (see [08](08-jobs-and-schedules.md)).
 

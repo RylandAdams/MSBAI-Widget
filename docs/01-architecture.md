@@ -21,6 +21,7 @@ How the widget is put together, from the pixels down to the background jobs.
 ├──────────────────────────────────────────────────────────────────────────┤
 │ Sources     claude.ai connectors: ClickUp, Slack, Gmail, Google Drive,   │
 │             Google Calendar, Fireflies, Zoom. Fireflies API (one key).   │
+│             ClickUp REST API for the CRM (the owner's token, GET only).  │
 │             macOS: EventKit, AppleScript, System Events, launchd         │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ Record      ClickUp (shared) · the owner's files under ~/AI Tools        │
@@ -30,15 +31,19 @@ How the widget is put together, from the pixels down to the background jobs.
 ## The UI
 
 - **Übersicht** draws HTML on the desktop layer, under every window. The widget is one file, `index.jsx`, compiled by Übersicht with its own JSX pragma (no React import, no fragments; see [11 Traps](11-traps.md)).
-- **Views.** `desk` (calendar, tasks, call bar, terminal slot, notes), `claude` (the Claude app parked in a slot), and three views the widget draws itself: `crm`, `workstreams` (key `priorities` in the code) and `wiki`.
+- **Views.** `desk` (the System and Meet pills, calendar, tasks, notes), `claude` (the Claude app parked in a slot), and three views the widget draws itself: `crm`, `workstreams` (key `priorities` in the code) and `wiki`. A double click on the desk tab opens **Settings**. The terminal slot is off (`CFG.terminal: false`) and its code is kept.
+- **One split for every view.** The edge above Notes resizes the big area, and the height is shared by desk, claude, crm, workstreams and wiki, so Notes stays in the same place when you switch.
+- **No scrollbars.** The shell's style hides every scrollbar inside the widget (`scrollbar-width: none` and a zero width WebKit scrollbar); panels still scroll with the wheel or trackpad. Scrolling panels keep their right gutter (a negative right margin with matching padding), so hiding the bar does not reflow anything.
+- **Settings.** Six sliders saved in `msbai_settings`: text size (`--msbfs`, which every `font-size` in the `css` wrapper multiplies by), widget size (the zoom), glass opacity (`--msbglass`), label contrast, tab bar size and corner roundness (`--msbradius`). Each slider's middle is the tuned setup; the values reach the CSS as custom properties on `:root`.
 - **Parking real windows.** The widget never reimplements another app. For the terminal and the Claude app it measures an empty slot, converts it to screen coordinates, and hands the rectangle to AppleScript (`dock.sh`), which moves the real window over it. The apps keep every feature, and nothing breaks when they update.
 - **Clicks run shell commands.** Every button calls a script (`crm.sh draft <base64 json>`, `cmd.sh run <base64 text>`, `dock.sh claude-new`, ...). Arguments go through base64 so nothing a user typed can break the command line.
-- **Layout state** lives in the browser's localStorage (`msbai_view`, `msbai_geo`, `msbai_split`, `msbai_fold`, `msbai_open_tasks`, `msbai_crm_ui`, ...). Data never does.
+- **Layout state** lives in the browser's localStorage (`msbai_view`, `msbai_geo`, `msbai_split`, `msbai_fold`, `msbai_open_tasks`, `msbai_crm_ui`, `msbai_settings`, `msbai_task_marks`, `msbai_task_order`, ...). Data never does.
+- **Build marker.** `index.jsx` has a `WIDGET_BUILD` string that the command writes to `desk-widget/.widget-build` on every beat. If the file does not show the build you just saved, Übersicht refused to compile the new file and is still running the last good one (see [11 Traps](11-traps.md)).
 - **Owner aware.** `me.json` names the owner. The UI says Mine, you, Yours; it highlights the owner's next steps in Workstreams (gold), their items in the CRM (mine), and signs drafts with their name.
 
 ## The beat
 
-`index.jsx` exports one `command` that runs every 120 seconds. It prints, in order: the Collab snapshot, the calendar (EventKit through JXA), `TASKS.md`, notes, terminal tabs, recent calls, the team, `me.json`, the Inbox, the workstreams flow, the owner's steps, prep cards, Google status, the screen size, closed ClickUp ids, the wiki and its live layer, the CRM, and notify alerts. `updateState` splits the output on the `===MARKER===` lines and parses each section. A second command polls CPU, memory, disk and top processes every 5 seconds.
+`index.jsx` exports one `command` that runs every 120 seconds. It prints, in order: the Collab snapshot, the calendar (EventKit through JXA), `TASKS.md`, notes, terminal tabs (when on), recent calls, the team, `me.json`, the Inbox, the workstreams flow, the owner's steps, prep cards, Google status, the screen size, closed ClickUp ids, the wiki and its live layer, the CRM (with its `PLUS` line from `plus.json`), and notify alerts. `updateState` splits the output on the `===MARKER===` lines and parses each section. A second command polls CPU, memory, disk and top processes every 5 seconds.
 
 Every `tick` must be fast. The rule each script follows:
 
@@ -82,7 +87,9 @@ Haiku sometimes stalls on pagination and asks for a shell; jobs that use it retr
 
 ### Connectors
 
-All of Slack, Gmail, Google Drive, Google Calendar, ClickUp, Fireflies and Zoom are reached as `mcp__claude_ai_<Service>__<tool>`: the claude.ai connectors of whoever is signed in to Claude Code on that Mac. There is no OAuth client, token file or API key for any of them. Two exceptions:
+All of Slack, Gmail, Google Drive, Google Calendar, ClickUp, Fireflies and Zoom are reached as `mcp__claude_ai_<Service>__<tool>`: the claude.ai connectors of whoever is signed in to Claude Code on that Mac. There is no OAuth client, token file or API key for any of them. Three exceptions:
+
+- **ClickUp personal API token** (`.clickup-token`, chmod 600, ignored by git, never printed): the CRM sync and lead cards read ClickUp's REST API directly (`crm_rest.py`, GET only), because the connector's daily limit kept running out. Every other ClickUp job still uses the connector.
 
 - **Fireflies API key** (`.fireflies-key`, chmod 600, never printed): listing recent meetings, fetching a transcript to a file, and adding the notetaker to a live call (`addToLiveMeeting`), which the connector cannot do.
 - **Google Calendar API** (optional, off): `gcal.py` can answer invitations and create events with invitees if a Google OAuth client is allowed. The Workspace org does not allow one today, so replies go through Calendar.app and creation through EventKit.
@@ -97,13 +104,13 @@ Full table in [08 Jobs and schedules](08-jobs-and-schedules.md).
 
 ## The ClickUp daily limit
 
-ClickUp allows about 1,000 connector calls a day per account. The widget's jobs, any OpenClaw job using the same login, and any Claude chat share that budget. Every ClickUp job sources `cu_limit.zsh`:
+ClickUp allows about 1,000 connector calls a day per account. The widget's jobs, any OpenClaw job using the same login, and any Claude chat share that budget. The REST API with a personal token has no daily cap (about 100 calls a minute), which is why the CRM moved to it on Oct 7. Every connector ClickUp job sources `cu_limit.zsh`:
 
 - `cu_note "<reply>"` looks for the limit message, works out the reset time, and writes it to `.clickup-blocked` (and a line to `.clickup-limit.log`).
 - `cu_blocked` is true until then. ClickUp only jobs (CRM sync and push, wiki live layer, the ClickUp mirror) skip their run and keep their last good data. Mixed jobs (owner's steps, notify, Inbox, task sync) run without their ClickUp tools.
 - Writes wait: the CRM outbox and the workstream push (`.flow/cupush-due`) go out on the first beat after the reset.
 
-The CRM sync is built to spend little: a list pass (about 20 calls) and a detail pass only for records that are new or changed since the last time (`.crm/fields.json`, at most 40 a run).
+The CRM no longer spends connector calls at all when the token is present. Without it, the connector path is built to spend little: a list pass (about 20 calls) and a detail pass only for records that are new or changed since the last time (`.crm/fields.json`, at most 40 a run).
 
 ## Where things live on the owner's Mac
 
@@ -114,7 +121,9 @@ The CRM sync is built to spend little: a list pass (about 20 calls) and a detail
 ├── transcripts/        meetings fetched from Fireflies, one markdown file each
 ├── notes/              the Notes tabs
 └── desk-widget/        this repo's src/desk-widget, personalized, plus its state
-    ├── me.json  team.tsv  crm-seed.tsv  crm-exclude.txt  .fireflies-key
+    ├── me.json  team.tsv  crm-seed.tsv  crm-exclude.txt  campaigns.json
+    ├── .fireflies-key  .clickup-token     keys, chmod 600, never published
+    ├── .widget-build   the build the running widget reports
     ├── rolodex/        one page per person
     └── .flow/ .crm/ .watch/ .emails/ .prep/ .zoom/ .wiki/ .tasks-sync/ .team/
 ```

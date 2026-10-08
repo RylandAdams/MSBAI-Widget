@@ -27,10 +27,10 @@ companies = [
   {"id": "msbai", "name": "MSBAI", "color": "#7FB2FF", "system": "guru",
    "tag": "GURU, the hybrid intelligence platform that drives expert engineering software",
    "home": "msbai"},
-  {"id": "tamfortis", "name": "Tam Fortis", "color": "#FF9F5A", "system": "reactor",
+  {"id": "tamfortis", "name": "Tam Fortis", "color": "#5ED3A1", "system": "reactor",
    "tag": "A helicopter portable microreactor, 35 to 40 kW for 5 to 10 years",
    "home": "tamfortis"},
-  {"id": "nexcavate", "name": "Nexcavate", "color": "#5ED3A1", "system": "permitpulse",
+  {"id": "nexcavate", "name": "Nexcavate", "color": "#FFB547", "system": "permitpulse",
    "tag": "PermitPulse, an AI copilot for mining permit teams",
    "home": "nexcavate"},
 ]

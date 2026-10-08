@@ -5,7 +5,8 @@
 
 What it does, in order:
   1. Copies only the files on the ALLOW list below (overwriting; it never deletes). State folders (.crm, .flow, .watch, ...), keys,
-     tokens, the Rolodex pages, contact lists, backups and vendor packs are never copied.
+     tokens (including .clickup-token), the Rolodex pages, contact lists, campaigns.json, backups and vendor packs
+     are never copied.
   2. Replaces the owner's name, email, Slack id, ClickUp id, home folder and Focus Board link with
      {{PLACEHOLDERS}}. tools/personalize.py puts a teammate's own values back at install time.
   3. Makes sure the owner's Fireflies key does not appear anywhere in the output (the key is read
@@ -34,11 +35,11 @@ ALLOW = [
     # workstreams
     "flow.sh", "flow_review.py", "mine.sh", "streams.tsv",
     # CRM, Rolodex, inbox
-    "crm.sh", "crm_build.py", "crm_merge.py", "crm_pages.py", "crm_watch.py", "emails.sh",
+    "crm.sh", "crm_build.py", "crm_merge.py", "crm_pages.py", "crm_watch.py", "crm_rest.py", "crm_plus.py", "emails.sh",
     # wiki
     "wiki.sh", "wiki_build.py", "wiki_v2.py", "wiki.json",
     # notify, prep, calls, commands
-    "watch.sh", "prep.sh", "zoom.sh", "cmd.sh", "team.sh",
+    "watch.sh", "watch_notes.py", "prep.sh", "zoom.sh", "cmd.sh", "team.sh",
     # desk plumbing
     "cal.sh", "gcal.sh", "gcal.py", "dock.sh", "notes.sh", "fireflies.sh", "voice.sh", "listen.swift",
     "openclaw-cmd",

@@ -5,6 +5,12 @@ Every one of these cost real debugging time. Read before changing the code.
 ## Übersicht and the UI
 
 - **No React import, no fragments.** Übersicht compiles JSX with its own pragma and no fragment pragma, so `<>...</>` becomes `React.Fragment` and the widget dies with "Can't find variable: React", while every ordinary tag keeps working. Return one element, or two complete ones from the two arms of a conditional.
+- **No `??` either**, and **no raw special characters in JSX text.** A bare `›` typed as text inside a tag (for example `open the campaign ›`) made Übersicht reject the whole file on Oct 7. Nothing errors on screen: the widget silently keeps running the last good build, so every later change looks like it did nothing. Put glyphs inside a string, `{"›"}`. Check `desk-widget/.widget-build`: if it does not show the `WIDGET_BUILD` you just saved, the new file did not compile. Bisect by commenting out halves.
+- **Test the JSX before saving.** Bundle it with esbuild (`--jsx-factory=h`), stub `uebersicht`, and render every view with a saved command output. It catches compile errors and render crashes that Übersicht would swallow.
+- **Animate `transform` and `opacity` only.** A pulse made with `box-shadow` keyframes repaints every frame and looks choppy. Pulses are pseudo elements that scale and fade.
+- **A header can swallow a close button.** The event card's header overlapped its X; the X needs its own stacking (`z-index: 10`).
+- **Drag to reorder selects text** unless `user-select: none` is set for the drag and a movement threshold separates a click from a drag.
+- **Hiding scrollbars needs both rules**: `scrollbar-width: none` and `::-webkit-scrollbar { width: 0; display: none }`, on the shell and every child, including the `:hover` state some panels styled.
 - **`className` styles Übersicht's wrapper, not your element.** The wrapper has one child, so a `gap` there separates nothing. The flex column must be on the element `render()` returns.
 - **Use CSS `zoom`, not `transform: scale()`.** `zoom` runs layout again so text stays sharp; `transform` stretches a bitmap.
 - **Measure the DOM in an event handler or a `setTimeout`, never during render.** Mid render, `getBoundingClientRect()` returns the previous commit's box.
@@ -40,7 +46,8 @@ Every one of these cost real debugging time. Read before changing the code.
 - **Large tool results are saved to a file.** Every prompt says to open them with Read.
 - **Never trust the model with invariants.** No status change without a reason, the four allowed CRM writes, at most 20 rank moves: enforced in Python.
 - **A partial page run is not data.** The wiki live sync refuses a result much smaller than the last one (it once replaced 605 tasks with 100).
-- **ClickUp's daily limit is shared.** When a reply says the limit is spent, stop every ClickUp job until the reset rather than spend calls that will be refused (`cu_limit.zsh`).
+- **ClickUp's daily limit is shared.** When a reply says the limit is spent, stop every ClickUp job until the reset rather than spend calls that will be refused (`cu_limit.zsh`). For heavy reads, use the REST API with a personal token instead (the CRM does, `crm_rest.py`).
+- **A log button is a write.** A "logged a LinkedIn touch" button posted a ClickUp comment on a person each time it was pressed. Anything that writes to a shared record needs to look like it writes, or not be there; the CRM tab is read only now.
 - **`clickup_merge_tasks` deletes tasks.** Never use it.
 - **A meeting read twice makes two nodes.** Mark the meeting being read as current before reading it.
 

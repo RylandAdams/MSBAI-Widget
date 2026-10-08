@@ -39,6 +39,7 @@ Inbox lists, used when a new task fits no workstream list clearly:
 | Contacts | 901115367051 | names, TPOC role, pursuit (topic code) | never |
 | Company Relationships | 901115367052 | names, stage, last touch, health, tier | never |
 | Opportunities | 901115367054 | by stage (values 2 to 5) | never |
+| Conversations | 901115367053 | every task (email history Hermes captures), for cards and contact evidence | never |
 | Follow-ups | 901115367058 | every open task with custom fields | close one; create one |
 | Interested Later | 901115485850 | every open task with custom fields | create one |
 | Proposals | 901102025484 | open statuses with custom fields; `won` names | never |
@@ -86,8 +87,9 @@ Proposal statuses read as open: to do, monitoring for release, waiting for respo
 | `clickup-sync.sh` snapshot (Collab) | Owner's open tasks that have another assignee | filter_tasks | Every 30 min, 6 am to 10 pm |
 | `clickup-sync.sh` collab notes | Description of each shared task that is new or changed (at most 4 a run) | get_task, search | Same run |
 | `wiki.sh` | Every open task in Goals & Workstreams | filter_tasks | Every 2 h, 7 am to 10 pm |
-| `crm.sh sync` | The CRM v3 lists and groups above; details only for new or changed records | filter_tasks, get_task | Every 3 h, 6 am to 10 pm |
-| `crm.sh card` | Everything about one person | filter_tasks, get_task, search | When a card is opened (kept a day) |
+| `crm_rest.py sync` (from `crm.sh sync`) | Every CRM v3 list above, all pages, with custom fields | REST: `GET /list/{id}/task` | Every hour, 6 am to 10 pm |
+| `crm_rest.py card` (from `crm.sh card`) | The records for one person, matched in `.crm/cu-cache.json` | REST: `GET /task/{id}` | When a card is opened (kept a day) |
+| `crm.sh sync`, `card` without a token | As above, through the connector | filter_tasks, get_task, search | Every 3 h, 6 am to 10 pm; on a card |
 | `watch.sh` | Comments on the ClickUp tasks linked from open desk tasks | get_task, get_task_comments, search | Every 30 min, 4:30 am to 11:30 pm |
 | `mine.sh` | The owner's closed tasks, as evidence a step is done | filter_tasks, search | Every 30 min, 6 am to midnight |
 | `tasks-sync.sh`, `emails.sh` | Lookups for context and links | search, filter_tasks, get_task | With their runs |
@@ -117,7 +119,9 @@ Never: delete, move, reassign, comment, or `clickup_merge_tasks` (it deletes). A
 
 Never: delete, archive, move or rename anything, never touch a task.
 
-### CRM (`crm.sh push`, from `.crm/outbox.jsonl`)
+### CRM (`crm.sh push`, from `.crm/outbox.jsonl`), dormant
+
+**Since Oct 7 no button queues these writes.** The CRM tab is read only; OpenClaw and the mail watchers keep ClickUp current. The push and its guards are kept in the code and documented here in case a write path is wanted again.
 
 | Op | What it does | Guard |
 |----|--------------|-------|

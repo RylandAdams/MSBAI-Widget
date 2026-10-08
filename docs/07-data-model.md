@@ -97,6 +97,32 @@ Queue files: `.flow/queue` (`id <TAB> ms <TAB> minutes <TAB> title`), `.flow/see
  "notes": [""]}
 ```
 
+**`.crm/plus.json`**: the playbook layer, written by `crm_plus.py`.
+
+```json
+{"updated": "",
+ "types": {"<contact task id>": "buyer|user|tpoc|adjacent|partner|peer|unknown"},
+ "pursuits": {"<proposal task id>": {
+     "due": "YYYY-MM-DD", "days": 6, "phase": "shaping|outreach|draft|gate|final|past", "state": "prerelease|open|...",
+     "open": "", "marks": {"start": "", "d21": "", "d14": "", "d7": ""},
+     "people": [{"n": "", "type": "", "st": "none|contacted|talked", "last": "", "url": "", "em": "", "id": "", "org": "", "title": ""}],
+     "talked": {"buyer": 0, "user": 0, "tpoc": 0, "adjacent": 0}, "gate": 0,
+     "gstate": "ok|building|short|late|nodate", "peers": 0, "cust": 0, "warn": ""}},
+ "campaigns": [{"key": "<name or p:<pursuit id>>", "name": "", "company": "", "pursuit": "", "due": "", "gate": "",
+     "auto": true, "release": "", "open": "", "goal": "", "ask": "", "doc": "",
+     "targets": [{"n": "", "org": "", "fn": "", "type": "", "stage": "found|contacted|replied|met|letter", "last": "",
+                  "channels": [""], "url": "", "inCrm": true, "touches": 0, "rel": "", "restrict": "", "first": false}],
+     "counts": {"letter": 0, "met": 0, "replied": 0, "contacted": 0, "found": 0},
+     "talked": 0, "offLimits": 0, "tpoc": {"n": 0, "fresh": 0, "window": "open|closed|unknown"}}],
+ "debriefs": [], "week": {}, "restrict": {"<contact id>": "<what Hermes recorded>"}}
+```
+
+`debriefs` and `week` are still computed but no UI shows them (both were taken out on Oct 8).
+
+**`campaigns.json`** (owner's, never published): `{"campaigns": [{"key", "name", "company", "pursuit", "due", "gate", "goal", "ask", "doc", "targets": [{"n", "org", "fn", "type", "first", "letter"}]}]}`. See `examples/campaigns.example.json`.
+
+**`.crm/cu-cache.json`**: every task the last REST sync read from the CRM lists (id, name, list, status, custom fields, dates), so a card can find its person locally. **`.crm/cu-lists.json`**: list ids and names. **`.crm/meetings-log.jsonl`**: past calendar meetings with people outside the team, one per line, the evidence for the `met` stage. **`.crm/touches.jsonl`**: touches logged from the tab (no UI writes it since Oct 8).
+
 **`.crm/cards/<id>.json`**: one context card (see [04](04-crm-and-rolodex.md#context-cards)), reused for a day, deleted after 14.
 
 **`.crm/outbox.jsonl`**: one queued write per line.

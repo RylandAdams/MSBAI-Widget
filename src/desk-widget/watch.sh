@@ -127,6 +127,12 @@ TASKPY
     print -r -- "   threads' list at the bottom (channel_id and message_ts are given). Keep every reply newer than the"
     print -r -- "   cutoff from anyone other than {{OWNER_FIRST}}, even if it does not mention him: teammates often reply to each"
     print -r -- "   other on his tasks (setting up a call, taking an item, answering a question) and that is news."
+    print -r -- "   Next, slack_read_channel on each channel in the 'Slack channels to scan' list with oldest=$since,"
+    print -r -- "   and keep new top level posts that are about one of the tasks (same topic, same people), even if"
+    print -r -- "   they are not in the linked thread. Read the thread of any such post that has replies."
+    print -r -- "   Next, for each person in the 'People on these tasks' list, slack_search_public_and_private with"
+    print -r -- "   query 'from:<@ID> after:$sinceiso' and keep messages that move one of their tasks forward, even"
+    print -r -- "   in a new thread, another channel or a group DM {{OWNER_FIRST}} is in."
     print -r -- "   Then slack_search_public_and_private with filters 'after:$sinceiso' for messages to, from"
     print -r -- "   or mentioning {{OWNER_FIRST}} (to:<@{{OWNER_SLACK_ID}}>, with:<@{{OWNER_SLACK_ID}}>, and keywords from the tasks)."
     print -r -- "3. Fireflies: fireflies_search 'from:$sinceiso' for meetings since then; read the summary only"
@@ -147,22 +153,38 @@ TASKPY
     print -r -- "The open tasks:"
     cat "$W/tasks.txt"
     print -r -- ""
-    print -r -- "Linked Slack threads (read every one with slack_read_thread):"
-    /usr/bin/python3 - "$W/tasks.txt" <<'LINKPY'
-import re, sys
-n, seen = None, set()
-for line in open(sys.argv[1], encoding="utf-8"):
+    /usr/bin/python3 - "$W/tasks.txt" "$HERE/team.tsv" <<'LINKPY'
+import os, re, sys
+tasks, team = sys.argv[1:3]
+people = []
+if os.path.exists(team):
+    for l in open(team, encoding="utf-8"):
+        f = l.rstrip("\n").split("\t")
+        if len(f) >= 2 and f[1].startswith("U"): people.append((f[0], f[1]))
+n, threads, chans, who = None, [], {}, {}
+for line in open(tasks, encoding="utf-8"):
     m = re.match(r"^TASK (\d+):", line)
-    if m: n = m.group(1); continue
+    if m: n = m.group(1)
+    if not n: continue
+    for name, uid in people:
+        if re.search(r"\b" + re.escape(name) + r"\b", line): who.setdefault((name, uid), set()).add(n)
     for u in re.findall(r"https://[\w.-]*slack\.com/archives/[^\s)]+", line):
         c = re.search(r"/archives/([A-Z0-9]+)/p(\d{10})(\d{6})", u)
-        if not c or not n: continue
+        if not c: continue
         t = re.search(r"thread_ts=([\d.]+)", u)
         ts = t.group(1) if t else f"{c.group(2)}.{c.group(3)}"
-        if (c.group(1), ts) in seen: continue
-        seen.add((c.group(1), ts))
-        print(f"TASK {n}: channel_id {c.group(1)}, message_ts {ts}")
-if not seen: print("(none)")
+        if (c.group(1), ts) not in [(x[1], x[2]) for x in threads]: threads.append((n, c.group(1), ts))
+        chans.setdefault(c.group(1), set()).add(n)
+k = lambda v: ", ".join(sorted(v, key=int))
+print("Linked Slack threads (read every one with slack_read_thread):")
+for n, ch, ts in threads: print(f"TASK {n}: channel_id {ch}, message_ts {ts}")
+if not threads: print("(none)")
+print("\nSlack channels to scan (slack_read_channel, new top level posts only):")
+for ch, v in chans.items(): print(f"channel_id {ch} (tasks {k(v)})")
+if not chans: print("(none)")
+print("\nPeople on these tasks (search their new messages):")
+for (name, uid), v in who.items(): print(f"{name} <@{uid}> (tasks {k(v)})")
+if not who: print("(none)")
 LINKPY
   } > "$W/prompt.md"
   log "sync: looking back to $sinceh"
@@ -209,6 +231,7 @@ json.dump(a, open(alerts, "w"), ensure_ascii=False, indent=1)
 print("\n".join(fresh))
 MERGEPY
 )
+  [ -n "$new" ] && /usr/bin/python3 "$HERE/watch_notes.py" "$TASKS" "$W/tasks.txt" "$W/output" >> "$LOG" 2>&1
   if [ -n "$new" ]; then
     log "sync: $(print -r -- "$new" | /usr/bin/grep -c .) new"
     print -r -- "$new" | while IFS=$'\t' read -r t what; do notify "Task update: $t" "$what"; done

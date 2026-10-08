@@ -75,7 +75,7 @@ for (var i = 0; i < evs.count; i++) {
             Math.round(col.greenComponent * 255) + ',' +
             Math.round(col.blueComponent * 255);
 
-  var mine = 0, natt = 0;
+  var mine = 0, natt = 0, people = [];
   try {
     var at = e.attendees;
     if (!at.isNil()) {
@@ -83,9 +83,14 @@ for (var i = 0; i < evs.count; i++) {
       for (var k = 0; k < at.count; k++) {
         var a = at.objectAtIndex(k);
         if (a.isCurrentUser) mine = a.participantStatus;
+        // who is invited, for the event card: name | status | email | 1 when it is you
+        var em = ''; try { em = s(a.URL.resourceSpecifier); } catch (err2) {}
+        people.push([s(a.name).replace(/[|;]/g, ' '), a.participantStatus, em.replace(/[|;]/g, ''), a.isCurrentUser ? '1' : ''].join('|'));
       }
     }
   } catch (err) {}
+  var org = '';
+  try { if (!e.organizer.isNil()) org = s(e.organizer.name); } catch (err) {}
 
   var url = '';
   try { if (!e.URL.isNil()) url = s(e.URL.absoluteString); } catch (err) {}
@@ -95,7 +100,8 @@ for (var i = 0; i < evs.count; i++) {
     e.status, mine, natt, c.type, field(c.title), rgb,
     field(e.title), field(e.location), field(url), field(e.notes),
     // the iCalendar UID — what gcal.py looks the event up by on Google's side
-    field(e.calendarItemExternalIdentifier)
+    field(e.calendarItemExternalIdentifier),
+    field(people.join(';;')), field(org)
   ].join('\t'));
 }
 out.join('\n');

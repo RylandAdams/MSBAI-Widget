@@ -32,6 +32,7 @@ C="$HERE/.crm"
 MODEL_JSON="$C/crm.json"
 LOG="$C/log"
 EVERY=${CRM_EVERY:-10800}         # seconds between ClickUp syncs (3 h; Hermes itself syncs hourly)
+[ -s "$HERE/.clickup-token" ] && EVERY=${CRM_EVERY:-3600}   # with your API token a sync is ~15 REST calls and no daily cap: hourly
 MODEL=${CRM_MODEL:-sonnet}        # haiku stalls on pagination (see the Collab snapshot notes)
 CARD_TTL=${CRM_CARD_TTL:-86400}
 
@@ -55,9 +56,64 @@ build() {
   /usr/bin/python3 "$HERE/crm_build.py" "$C/output" "$HERE/crm-seed.tsv" "$HERE/crm-exclude.txt" \
     "$HERE/team.tsv" "$HERE/me.json" "$MODEL_JSON" "$C/mentions.tsv"
   [ -s "$MODEL_JSON" ] && /usr/bin/python3 "$HERE/crm_pages.py" "$MODEL_JSON" "$C/cards" "$HERE/rolodex" >/dev/null 2>&1
+  /usr/bin/python3 "$HERE/crm_plus.py" >/dev/null 2>&1      # the playbook layer: gate, debriefs, campaigns, week
+}
+
+# ── the playbook layer's two writes: a touch the mail capture cannot see, and a meeting debrief ──
+touch_now() {   # {"n","ch","campaign","note","reply","rel","company"} -> touches.jsonl, the Rolodex page, a ClickUp comment
+  local spec=$(print -r -- "$1" | /usr/bin/base64 -D 2>/dev/null)
+  /usr/bin/python3 - "$C/touches.jsonl" "$spec" <<'TPY'
+import datetime, json, sys
+d = json.loads(sys.argv[2]); d["when"] = datetime.datetime.now().isoformat(timespec="minutes")
+open(sys.argv[1], "a").write(json.dumps(d, ensure_ascii=False) + "\n")
+TPY
+  local nb=$(print -r -- "$spec" | /usr/bin/python3 -c '
+import json, sys, base64
+d = json.load(sys.stdin)
+ch = {"li": "LinkedIn note", "inmail": "Sales Navigator InMail", "call": "Phone call", "email": "Email", "reply": "They replied"}.get(d.get("ch"), d.get("ch") or "Touch")
+t = ch + (" (" + d["campaign"] + ")" if d.get("campaign") else "") + (": " + d["note"] if d.get("note") else "")
+print(base64.b64encode(json.dumps({"name": d["n"], "company": d.get("company", ""), "text": t, "rel": d.get("rel", "")}).encode()).decode())')
+  note_now "$nb" >/dev/null
+  /usr/bin/python3 "$HERE/crm_plus.py" >/dev/null 2>&1
+  print -r -- "ok"
+}
+debrief_now() {   # {"key","title","want","need","next","people":[{"n","rel"}],"company"} -> debriefs.jsonl, each person's page and ClickUp record
+  local spec=$(print -r -- "$1" | /usr/bin/base64 -D 2>/dev/null)
+  /usr/bin/python3 - "$C" "$spec" <<'DPY'
+import datetime, json, os, sys
+c, d = sys.argv[1], json.loads(sys.argv[2])
+d["when"] = datetime.datetime.now().isoformat(timespec="minutes")
+open(os.path.join(c, "debriefs.jsonl"), "a").write(json.dumps(d, ensure_ascii=False) + "\n")
+open(os.path.join(c, "debriefed"), "a").write(d["key"] + "\n")
+DPY
+  print -r -- "$spec" | /usr/bin/python3 -c '
+import json, sys, base64
+d = json.load(sys.stdin)
+txt = "Debrief, %s: they want %s. They need %s. Next: %s" % (d.get("title", "meeting"), d.get("want") or "?", d.get("need") or "?", d.get("next") or "?")
+for p in d.get("people", [])[:8]:
+    print(base64.b64encode(json.dumps({"name": p["n"], "company": d.get("company", ""), "text": txt, "rel": p.get("rel", "")}).encode()).decode())' | while read -r nb; do note_now "$nb" >/dev/null; done
+  /usr/bin/python3 "$HERE/crm_plus.py" >/dev/null 2>&1
+  print -r -- "ok"
+}
+
+# With your ClickUp API token (.clickup-token) the sync reads ClickUp's REST API directly
+# (crm_rest.py): no Claude run and none of the connector's shared daily limit. Without the token, or
+# if a REST run fails, it falls back to the connector passes below.
+rest_sync() {
+  if ! mkdir "$C/lock" 2>/dev/null; then
+    (( $(date +%s) - $(mtime "$C/lock") < 2400 )) && return 0
+    rmdir "$C/lock"; mkdir "$C/lock" || return 0
+  fi
+  local res=$(/usr/bin/python3 "$HERE/crm_rest.py" sync "$C/output.rest" 2>&1 | tail -1)
+  rmdir "$C/lock" 2>/dev/null
+  case $res in
+    ok*) mv "$C/output.rest" "$C/output"; b=$(build); log "sync (REST): ${res#ok }; ${b#ok }"; touch "$C/last-sync"; return 0 ;;
+    *)   log "sync REST FAILED, using the connector instead: $res"; return 1 ;;
+  esac
 }
 
 sync_now() {
+  [ -s "$HERE/.clickup-token" ] && rest_sync && return 0
   if cu_blocked; then log "sync skipped: ClickUp daily limit, waits until $(cu_until)"; return 0; fi
   if ! mkdir "$C/lock" 2>/dev/null; then
     (( $(date +%s) - $(mtime "$C/lock") < 2400 )) && return 0
@@ -140,22 +196,45 @@ for k in ("name", "company", "kind", "context"): print(one(d.get(k)))' "$C/card-
     print -r -- "CARD"$'\t'"$id"$'\t'"$(tr -d '\n' < "$f")"; return
   fi
   local who=$(/usr/bin/python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); print(m.get("full") or m.get("name") or "the owner")' "$HERE/me.json" 2>/dev/null)
+  # With your API token, the ClickUp records come from the REST API (crm_rest.py card): a few direct
+  # calls, none of the connector's shared daily limit, and the card's Claude run gets no ClickUp tools.
+  local cu_rest="" step1
+  local -a cu_tools; cu_tools=(mcp__claude_ai_ClickUp__clickup_search mcp__claude_ai_ClickUp__clickup_get_task)
+  if [ -s "$HERE/.clickup-token" ]; then
+    cu_rest=$(/usr/bin/python3 "$HERE/crm_rest.py" card "$C/card-spec.json" 2>&1)
+    case $cu_rest in failed:*) log "card REST lookup failed, using the connector: ${cu_rest#failed: }"; cu_rest="" ;; esac
+  fi
+  if [ -n "$cu_rest" ]; then
+    cu_tools=()
+    if [ "$cu_rest" = "NO_MATCH" ]; then
+      step1="1. ClickUp: nothing in the CRM space (Contacts, Company Relationships, Conversations, Follow-ups, Interested Later, Proposals) matches this name. Say so only if it matters; do not look in ClickUp."
+    else
+      print -r -- "$cu_rest" > "$C/card-clickup.md"
+      step1="1. ClickUp: the matching CRM records are already fetched below (Contacts, Company Relationships, Conversations and the rest). Use them; do not look in ClickUp. The Conversations description lists each message with its Gmail link."
+    fi
+  else
+    step1="1. ClickUp (workspace 20115771): clickup_search for the name; read the matching Contacts, Company Relationships and Conversations tasks (clickup_get_task with custom_fields and description). The Conversations description lists each message with its Gmail link."
+  fi
   {
     print -r -- "Read only and unattended: never send, draft, post, create or change anything. Nobody will answer questions."
     print -r -- "Today is $(date '+%A %b %d %Y'). You are briefing $who before they reach out. Companies: MSBAI (GURU, autonomous simulation and space AI), Tam Fortis Solutions (portable nuclear microreactors), Nexcavate (PermitPulse permitting AI), all led by Allan Grosvenor."
     print -r -- "Subject: $name ($company). Kind of row: $kind. What the CRM already knows: $ctx"
     print -r -- ""
     print -r -- "Gather, as much as helps and no more:"
-    print -r -- "1. ClickUp (workspace 20115771): clickup_search for the name; read the matching Contacts, Company Relationships and Conversations tasks (clickup_get_task with custom_fields and description). The Conversations description lists each message with its Gmail link."
+    print -r -- "$step1"
     print -r -- "2. Gmail: search_threads from: or to: them (or the subject), get_thread on the most recent one or two."
     print -r -- "3. Slack: slack_search_public_and_private for the name. Fireflies: fireflies_search for the name."
     print -r -- ""
     print -r -- "Then print CARD_START, one JSON object on one line, CARD_END, and nothing else. Keys (use \"\" or [] when unknown, never invent):"
     print -r -- "who (title and organization), how_met, first_touch (date), last_touch (date), gap (plain words, like \"9 months quiet\"), last_speaker (us or them), going_on (two or three short sentences), promises_ours (list), promises_theirs (list), why_stopped, linked (list of proposals, contracts or partners), cautions (list: TPOC on an open topic means no direct contact; an active partner is never cold messaged; Tam Fortis or Nexcavate lane means send from that company's mailbox), next_step (one sentence), suggested (a short message they could send, signed with the owner's first name, or \"\"), links (list of {\"t\": label, \"u\": url})."
     print -r -- "Writing: plain words, short. GURU in all caps. No em dashes, en dashes or hyphens used as connectors."
+    if [ -n "$cu_rest" ] && [ "$cu_rest" != "NO_MATCH" ]; then
+      print -r -- ""
+      print -r -- "ClickUp records (read only, fetched just now):"
+      print -r -- "$cu_rest"
+    fi
   } > "$C/card-prompt.md"
-  out=$(claude_run 600 "$MODEL" "$C/card-prompt.md" ToolSearch Read \
-        mcp__claude_ai_ClickUp__clickup_search mcp__claude_ai_ClickUp__clickup_get_task \
+  out=$(claude_run 600 "$MODEL" "$C/card-prompt.md" ToolSearch Read "${cu_tools[@]}" \
         mcp__claude_ai_Gmail__search_threads mcp__claude_ai_Gmail__get_thread \
         mcp__claude_ai_Slack__slack_search_public_and_private mcp__claude_ai_Fireflies__fireflies_search)
   print -r -- "$out" > "$C/card-output"
@@ -433,6 +512,8 @@ tick)
   done
   (( $(date +%s) - $(mtime "$C/last-watch") >= 300 )) && watch_now
   [ -s "$C/alerts.json" ] && print -r -- "ALERTS"$'\t'"$(tr -d '\n' < "$C/alerts.json")"
+  (( $(date +%s) - $(mtime "$C/plus.json") >= 90 )) && /usr/bin/python3 "$HERE/crm_plus.py" >/dev/null 2>&1
+  [ -s "$C/plus.json" ] && print -r -- "PLUS"$'\t'"$(tr -d '\n' < "$C/plus.json")"
   if [ -s "$C/nudges.tsv" ]; then   # nudges still waiting in drafts, minus the ones marked done
     [ -s "$C/nudges-done" ] || print -r -- "#" > "$C/nudges-done"   # awk's NR == FNR needs a non empty first file
     /usr/bin/awk -F'\t' 'NR == FNR { done[$1] = 1; next } !($1 in done)' "$C/nudges-done" "$C/nudges.tsv" | /usr/bin/tail -20 | /usr/bin/sed $'s/^/NUDGE\t/'
@@ -476,6 +557,9 @@ watch) watch_now ;;
 seen)  print -r -- "$2" >> "$C/seen"; watch_now; print -r -- "ok" ;;
 queue) queue_op "$2" ;;
 note)  note_now "$2" ;;
+touch) touch_now "$2" ;;
+debrief) debrief_now "$2" ;;
+debrief-skip) print -r -- "$2" >> "$C/debriefed"; /usr/bin/python3 "$HERE/crm_plus.py" >/dev/null 2>&1; print -r -- "ok" ;;
 push)  push_now ;;
 pages) pages; print -r -- "ok" ;;
 nudge-done) print -r -- "$2" >> "$C/nudges-done"; print -r -- "nudge:$2" >> "$C/seen"; watch_now; print -r -- "ok" ;;

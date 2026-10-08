@@ -1,0 +1,21 @@
+{
+ "_about": "Outreach campaigns the CRM tab tracks on top of the ones it makes by itself from open proposals (crm_plus.py). Use this file for a target list the CRM does not hold yet, like an agency roster from research. Each target's stage (found, contacted, replied, met, letter) is worked out from CRM evidence. Set \"letter\": true once their letter of support is in hand, and \"first\": true on the person to reach first. Tie a list to a proposal with its ClickUp task id in \"pursuit\", and the CRM's customer people for that proposal are added to it. Every name below is made up.",
+ "campaigns": [
+  {
+   "key": "example-agency-p2",
+   "name": "Example Agency for a Phase II",
+   "company": "MSBAI",
+   "pursuit": "",
+   "due": "2026-11-20",
+   "gate": "2026-11-06",
+   "goal": "3 conversations with the agency by the gate, letters of support with the draft attached a week later",
+   "ask": "A short look at what we built and their feedback. If they cannot meet, who in their office we should talk to.",
+   "doc": "",
+   "targets": [
+    { "n": "Pat Example", "org": "Example Agency", "fn": "Flight Safety Analysis", "first": true },
+    { "n": "Chris Sample", "org": "Example Agency", "fn": "System Operations", "type": "user" },
+    { "n": "Dana Placeholder", "org": "Example Agency", "fn": "Program Office", "type": "buyer" }
+   ]
+  }
+ ]
+}

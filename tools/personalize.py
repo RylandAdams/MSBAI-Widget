@@ -68,7 +68,7 @@ for root, dirs, files in os.walk(SRC):
 # me.json, plus starter copies of the owner's own lists (never overwritten once they exist)
 json.dump(me, open(os.path.join(dest, "me.json"), "w"), indent=2)
 for ex, name in [("team.example.tsv", "team.tsv"), ("crm-seed.example.tsv", "crm-seed.tsv"),
-                 ("crm-exclude.example.txt", "crm-exclude.txt")]:
+                 ("crm-exclude.example.txt", "crm-exclude.txt"), ("campaigns.example.json", "campaigns.json")]:
     if not os.path.exists(os.path.join(dest, name)):
         shutil.copy(os.path.join(EX, ex), os.path.join(dest, name))
 for ex, name in [("TASKS.example.md", "TASKS.md"), ("CLAUDE.example.md", "CLAUDE.md")]:

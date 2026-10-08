@@ -17,7 +17,14 @@
 // white-tinted translucency over a heavy backdrop blur, hairline light border,
 // 22px corners, and 9px/800 uppercase labels. Edit CFG to move/resize.
 
-import { css, run } from "uebersicht";
+import { css as emoCss, run } from "uebersicht";
+// Every css block goes through here so the Settings page can scale text: each "font-size: Npx"
+// becomes N px times the Text size slider (a CSS variable set on the page, 1 = as designed).
+const css = (strings, ...vals) => {
+  let out = strings[0];
+  vals.forEach((v, i) => { out += v + strings[i + 1]; });
+  return emoCss(out.replace(/font-size:\s*([\d.]+)px/g, "font-size: calc($1px * var(--msbfs, 1))"));
+};
 
 // ───────────────────────── config ─────────────────────────
 const CFG = {
@@ -45,6 +52,9 @@ const CFG = {
   spareHours: 4,                    // drawn past the window, into room hidden all-day chips give back
   hourHeight: 44,                   // px per hour row — starting value; the divider adjusts it
   dockHeight: 280,                  // px — where the terminal window parks (0 to remove)
+  terminal: false,                  // the Terminal strip on the desk (thread tabs and the slot a Terminal
+                                    // window parks in). Off: Calendar and Tasks grow into its room, so
+                                    // Notes stays where it is on every tab. true brings it back.
   rackWidth: 196,                   // px — the thread rail in the Claude pane
   claudeHeight: 940,                // px — the Claude desktop pane, in the other view
   notesHeight: 120,                 // px — about a paragraph
@@ -96,13 +106,13 @@ const CAL_CMD = `"${CFG.folder}/desk-widget/cal.sh" events ${CFG.hours + CFG.spa
 
 // ───────────────────────── glass ─────────────────────────
 const GLASS = {
-  bg: `rgba(255, 255, 255, ${CFG.glassTint})`,
+  bg: `rgba(255, 255, 255, var(--msbglass, ${CFG.glassTint}))`,
   blur: `${CFG.glassBlur}px`,
-  radius: "22px",
+  radius: "var(--msbradius, 22px)",
   border: "1px solid rgba(255, 255, 255, 0.15)",
   shadow: "0 20px 50px rgba(0,0,0,0.3)",
-  label: "rgba(255, 255, 255, 0.4)",
-  sub: "rgba(255, 255, 255, 0.6)",
+  label: "rgba(255, 255, 255, var(--msbl, 0.4))",
+  sub: "rgba(255, 255, 255, var(--msbs, 0.6))",
   hair: "rgba(255, 255, 255, 0.1)",
 };
 // cal = the interactive highlight: a cool silver rather than a saturated blue, so selection and
@@ -114,18 +124,27 @@ const FROST = CFG.glassBlur > 0
      transform: translateZ(0); will-change: backdrop-filter;`
   : "";
 
+// Urgency has its own colors, apart from every company color (MSBAI blue, Tam Fortis green,
+// Nexcavate amber) and the gold of "yours": red for late, overdue, owed or failed; rose for a
+// warning or "soon".
 const ACCENT = { cpu: "#34C759", ram: "#32D74B", disk: "#FFCC00", cal: "#CBD3DE", now: "#FF453A",
                  link: "#4CB4FF",
                  pin: "#F2C14E",      // a pinned task's title: gold
-                 notify: "#C9A8FF" }; // a task with news (watch.sh): soft violet. link is the one blue, reserved for "this opens something"
+                 notify: "#C9A8FF",   // a task with news (watch.sh): soft violet
+                 reply: "#64D2FF",
+                 heads: "#F5D46B" };  // "good to know" cautions on a CRM card (embargo, TPOC rules, which mailbox): soft gold. Red stays for late.  // waiting on YOUR reply, everywhere (CRM, inbox, tab badge, unanswered invites): baby blue // a task with news (watch.sh): soft violet. link is the one blue, reserved for "this opens something"
 
 // ───────────────────────── data commands ─────────────────────────
 // cal.sh reads EventKit directly (colour, attendee status, cancellations — none of which
 // icalBuddy can express) and falls back to icalBuddy if calendar access is refused.
 // fireflies.sh serves a cached list of meeting titles; a transcript is only ever fetched
 // when one is clicked.
+// Written by the command on every beat, so a look at desk-widget/.widget-build tells which version of
+// this file Übersicht is actually running (a file that fails to compile leaves the old one running).
+const WIDGET_BUILD = "2026-10-08 proposals first";
 export const command = `
 F="${CFG.folder}";
+echo "${WIDGET_BUILD}" > "$F/desk-widget/.widget-build";
 for nf in "$F/desk-widget/.newnotes/"*.md; do [ -f "$nf" ] && mv -n "$nf" "$F/notes/" 2>/dev/null; done;
 for nf in "$F/desk-widget/.replacenotes/"*.md; do [ -f "$nf" ] && mv -f "$nf" "$F/notes/" 2>/dev/null; done;
 [ -f "$F/desk-widget/.notes-cleaned-1" ] || { rm -f "$F/notes/guru-wording.md"; : > "$F/desk-widget/.notes-cleaned-1"; };
@@ -223,6 +242,25 @@ const savedPins = () => {
   try { return JSON.parse(localStorage.getItem(PIN_KEY) || "[]"); } catch (e) { return []; }
 };
 
+// Highlights: rest the pointer on the far right edge of a task for a moment and a small swatch
+// tray slides out; pick one of three colors (click the same one again to clear it). Keyed by
+// title, like pins. Only this widget sees them.
+const MARK_KEY = "msbai_task_marks";
+const MARKS = [                             // sticky note colors: pink, yellow, blue
+  { key: "m1", name: "pink",   hex: "#FF9ECF", rgb: "255,158,207" },
+  { key: "m2", name: "yellow", hex: "#FFE566", rgb: "255,229,102" },
+  { key: "m3", name: "blue",   hex: "#8FD8FF", rgb: "143,216,255" },
+];
+const savedMarks = () => {
+  try { return JSON.parse(localStorage.getItem(MARK_KEY) || "{}") || {}; } catch (e) { return {}; }
+};
+// Your own order: hold a task and drag it to move it. Pinned rows stay on top (in the order you
+// drag them), then new tasks you have not placed yet, then the rest in your order.
+const ORDER_KEY = "msbai_task_order";
+const savedOrder = () => {
+  try { return JSON.parse(localStorage.getItem(ORDER_KEY) || "[]") || []; } catch (e) { return []; }
+};
+
 // The Tasks panel has two tabs: the desk list (TASKS.md), and Collab, {{OWNER_FIRST}}'s open ClickUp tasks
 // that teammates are also assigned to, as clickup-sync.sh last saw them (.clickup-collab.tsv,
 // refreshed every 10 min). A click on a tab switches; a double-click on either opens his Focus Board.
@@ -256,6 +294,62 @@ let lastRowH = 0;
 // Hiding an all-day chip used to shorten the calendar panel, and the whole cluster below it rode
 // up with it. The panel now keeps the tallest height it has had today at this hour height, and the
 // hour grid grows into whatever the chips give back — more of the coming hours, nothing moving.
+// The calendar panel's fixed part (header, all-day chips, padding): everything but the hour grid.
+// With the terminal off, the hours stretch so the panel fills the room the terminal used to take.
+// ── Settings (double-click the desk tab) ──
+// Each slider's middle is the setup this widget was tuned on, so moving one is always a change
+// from a known good place. Saved per Mac; Reset puts everything back to the middle.
+const SETTINGS_KEY = "msbai_settings";
+const SETTINGS = [
+  { k: "fs",     label: "Text size",       min: 0.8,  max: 1.2,  step: 0.01, def: 1,    fmt: v => `${Math.round(v * 100)}%`,
+    hint: "every label, title and note" },
+  { k: "zoom",   label: "Widget size",     min: 0.92, max: 1.32, step: 0.01, def: 1.12, fmt: v => `${Math.round(v / 1.12 * 100)}%`,
+    hint: "the whole cluster, bigger or smaller on screen" },
+  { k: "glass",  label: "Glass opacity",   min: 0.04, max: 0.30, step: 0.005, def: 0.17, fmt: v => `${Math.round(v * 100)}%`,
+    hint: "clearer for a dark wallpaper, milkier for a busy one" },
+  { k: "ink",    label: "Label contrast",  min: 0.6,  max: 1.4,  step: 0.01, def: 1,    fmt: v => `${Math.round(v * 100)}%`,
+    hint: "how bright the gray secondary text is" },
+  { k: "tabs",   label: "Tab bar size",    min: 0.8,  max: 1.4,  step: 0.01, def: 1,    fmt: v => `${Math.round(v * 100)}%`,
+    hint: "the desk, claude, crm, workstreams, wiki switch" },
+  { k: "radius", label: "Corner roundness", min: 10,  max: 34,   step: 1,    def: 22,   fmt: v => `${Math.round(v)}px`,
+    hint: "how rounded the glass panels are" },
+];
+const SETTINGS_DEF = Object.assign({}, ...SETTINGS.map(x => ({ [x.k]: x.def })));
+const savedSettings = () => {
+  try { return { ...SETTINGS_DEF, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") || {}) }; }
+  catch (e) { return { ...SETTINGS_DEF }; }
+};
+CFG.zoom = savedSettings().zoom || CFG.zoom;          // the widget size slider drives the cluster's zoom
+function setSetting(cur, k, v, dispatch) {
+  const next = { ...(cur || SETTINGS_DEF), [k]: v };
+  if (k === "zoom") CFG.zoom = v;
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(next)); } catch (e) {}
+  dispatch({ type: "SETTINGS", value: next });
+}
+function resetSettings(dispatch) {
+  CFG.zoom = SETTINGS_DEF.zoom;
+  try { localStorage.removeItem(SETTINGS_KEY); } catch (e) {}
+  dispatch({ type: "SETTINGS", value: { ...SETTINGS_DEF } });
+}
+const settingsVars = st => `:root { --msbfs: ${st.fs}; --msbglass: ${st.glass}; --msbradius: ${st.radius}px;
+  --msbl: ${Math.min(1, 0.4 * st.ink).toFixed(3)}; --msbs: ${Math.min(1, 0.6 * st.ink).toFixed(3)}; }`;
+
+// The System pill: click it to flip between load (CPU, RAM, free space) and storage detail.
+const SYSMODE_KEY = "msbai_sys_mode";
+const savedSysMode = () => { try { return localStorage.getItem(SYSMODE_KEY) || "load"; } catch (e) { return "load"; } };
+function flipSysMode(cur, dispatch) {
+  const next = cur === "disk" ? "load" : "disk";
+  try { localStorage.setItem(SYSMODE_KEY, next); } catch (e) {}
+  dispatch({ type: "SYS_MODE", value: next });
+}
+const CALFIX_KEY = "msbai_cal_fixed";
+const savedCalFixed = () => { try { return parseInt(localStorage.getItem(CALFIX_KEY) || "0", 10) || 0; } catch (e) { return 0; } };
+function rememberCalFixed() {
+  const el = document.getElementById("msbai-cal"), g = document.getElementById("msbai-grid");
+  if (!el || !g) return;
+  const f = Math.round(el.offsetHeight - g.offsetHeight);
+  if (f > 0 && f !== savedCalFixed()) { try { localStorage.setItem(CALFIX_KEY, String(f)); } catch (e) {} }
+}
 const CALH_KEY = "msbai_calh";
 const savedCalH = hourH => {
   try {
@@ -280,7 +374,13 @@ function rememberPaneH() {
   if (!r || !n) return;
   const h = Math.round(n.offsetTop - r.offsetTop - CFG.gap);
   if (h > 100) { try { localStorage.setItem(PANEH_KEY, String(h)); } catch (e) {} }
+  // Everything above the terminal slot (calendar row, gap, thread tabs). The big area on every
+  // other tab is this plus the terminal's height, so Notes sits in the same place on all tabs.
+  const d = document.getElementById("msbai-dock");
+  if (d && h > 100) { try { localStorage.setItem(PANEOVER_KEY, String(Math.round(h - d.offsetHeight))); } catch (e) {} }
 }
+const PANEOVER_KEY = "msbai_pane_over";
+const savedPaneOver = () => { try { return parseInt(localStorage.getItem(PANEOVER_KEY) || "0", 10) || 0; } catch (e) { return 0; } };
 function rememberRowH() {
   const el = document.getElementById("msbai-row");
   if (!el) return;
@@ -317,6 +417,7 @@ export const initialState = {
   meetings: [], meetNote: "", pulling: "", copied: "",
   geo: savedGeo(), split: savedSplit(), hiddenChips: savedChips(), sel: null,
   fold: savedFold(), openTasks: savedOpen(), pinned: savedPins(), copiedTask: "",
+  marks: savedMarks(), taskOrder: savedOrder(), markPop: "", taskDrag: null, sysMode: savedSysMode(), settings: savedSettings(),
   taskTab: savedTaskTab(), cuTasks: [], cuNotes: {}, cuClose: { pending: 0, titles: [] },
   gcal: "", compose: null, evBusy: "", flash: "", zoomBox: null, zooms: [], team: [], teamNotes: { added: [], gone: [], synced: 0 }, teamSync: false,
   me: { name: "", aliases: [] },
@@ -346,6 +447,8 @@ const parseLocal = v => {
   return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) : null;
 };
 
+// EventKit participant status -> the card's reply dot
+const EK_PART = { 0: "pending", 1: "pending", 2: "accepted", 3: "declined", 4: "tentative", 5: "accepted", 6: "accepted", 7: "pending" };
 function parseCal(block) {
   const events = [], allDay = [];
   const text = String(block || "");
@@ -369,6 +472,12 @@ function parseCal(block) {
       url: unesc(f[12]),
       notes: unesc(f[13]),
       uid: (f[14] || "").trim(),                        // iCalendar UID — gcal.sh finds it on Google by this
+      // who is invited (cal.sh): name, reply, email, and which one is you
+      people: unesc(f[15]).split(";;").filter(Boolean).map(x => {
+        const [n, st, em, me] = x.split("|");
+        return { n: (n || "").trim() || (em || "").split("@")[0], st: EK_PART[parseInt(st, 10)] || "pending", em: (em || "").trim(), me: me === "1" };
+      }),
+      organizer: unesc(f[16]).trim(),
     };
     const start = parseLocal(f[1]), end = parseLocal(f[2]);
     // spareHours fetches past the window; an all-day event that only starts out there stays hidden
@@ -672,6 +781,12 @@ export const updateState = (event, prevIn) => {
   if (event.type === "FOLD") return { ...prev, fold: event.value };
   if (event.type === "OPEN_TASKS") return { ...prev, openTasks: event.value };
   if (event.type === "PINNED") return { ...prev, pinned: event.value };
+  if (event.type === "MARKS") return { ...prev, marks: event.value };
+  if (event.type === "SYS_MODE") return { ...prev, sysMode: event.value };
+  if (event.type === "SETTINGS") return { ...prev, settings: event.value };
+  if (event.type === "MARK_POP") return { ...prev, markPop: event.value };
+  if (event.type === "TASK_ORDER") return { ...prev, taskOrder: event.value };
+  if (event.type === "TASK_DRAG") return { ...prev, taskDrag: event.value };
   if (event.type === "TASK_TAB") return { ...prev, taskTab: event.value };
   if (event.type === "COPIED_TASK") return { ...prev, copiedTask: event.value };
   if (event.type === "WATCH_DISMISS") { const w = { ...(prev.watch || {}) }; delete w[event.value]; return { ...prev, watch: w }; }
@@ -689,7 +804,7 @@ export const updateState = (event, prevIn) => {
   if (event.type === "CRM") return { ...prev, crm: parseCrm(event.value, prev.crm) };
   if (event.type === "CRM_UI") {
     const ui = { ...(prev.crmUi || savedCrmUi()), ...event.value };
-    try { localStorage.setItem(CRM_UI_KEY, JSON.stringify({ co: ui.co, tab: ui.tab, mine: ui.mine, older: ui.older, cal: ui.cal, order: ui.order, fold: ui.fold, orderV: 2 })); } catch (e) {}
+    try { localStorage.setItem(CRM_UI_KEY, JSON.stringify({ co: ui.co, tab: ui.tab, mine: ui.mine, older: ui.older, cal: ui.cal, order: ui.order, fold: ui.fold, orderV: 3, flowV: 2 })); } catch (e) {}
     return { ...prev, crmUi: ui };
   }
   if (event.type === "CRM_DRAFT") {
@@ -1105,14 +1220,14 @@ function reparkAfterResize(dispatch) {
     else { const app = appByKey(curView); if (app) setPane(app.name); }
   }, 220);
 }
-function beginBottomSplit(e, sp, which, dispatch) {
+function beginBottomSplit(e, sp, which, dispatch, start) {
   if (e.button !== 0) return;
   e.preventDefault(); e.stopPropagation();
   const shellEl = document.getElementById("msbai-zoom");
   const k = zoomCorrection() || 1;
   const bottom0 = shellEl ? shellEl.getBoundingClientRect().bottom : 0;
   const free = Math.max(0, ((window.innerHeight || 900) - 6 - bottom0) / k);
-  const y0 = e.clientY, dock0 = sp.dock, notes0 = sp.notes || CFG.notesHeight;
+  const y0 = e.clientY, dock0 = start || sp[which] || sp.dock, notes0 = sp.notes || CFG.notesHeight;
   let next = { ...sp };
   const move = ev => {
     const d = (ev.clientY - y0) / k;
@@ -1122,7 +1237,7 @@ function beginBottomSplit(e, sp, which, dispatch) {
       const grow = Math.max(0, d - free);                  // beyond the free room: borrow from notes
       const notes = Math.round(clamp(notes0 - grow, NOTES_MIN, notes0));
       const dock = Math.round(clamp(dock0 + Math.min(d, free) + (d > free ? notes0 - notes : 0), 120, 1600));
-      next = { ...sp, dock, notes };
+      next = { ...sp, [which]: dock, notes };
     }
     dispatch({ type: "SPLIT", value: next });
   };
@@ -1201,6 +1316,59 @@ function togglePin(title, pinned, dispatch) {
   const next = cur.includes(title) ? cur.filter(t => t !== title) : [title, ...cur];
   try { localStorage.setItem(PIN_KEY, JSON.stringify(next)); } catch (e) {}
   dispatch({ type: "PINNED", value: next });
+}
+
+function setMark(title, key, marks, dispatch) {
+  const next = { ...(marks || {}) };
+  if (!key || next[title] === key) delete next[title]; else next[title] = key;
+  try { localStorage.setItem(MARK_KEY, JSON.stringify(next)); } catch (e) {}
+  dispatch({ type: "MARKS", value: next });
+  dispatch({ type: "MARK_POP", value: "" });
+}
+// Hold a task and drag it up or down. Nothing happens until the pointer has moved a few pixels, so
+// a plain click still opens the notes and a double-click still opens the swatches. The rows
+// rearrange live under the pointer; on release, pinned rows keep their place at the top (in the
+// new order) and everything else is saved as your order. Not from inside open notes or news, so
+// text there can still be selected and links clicked.
+let taskDragged = false;
+let threadsHidden = false;          // terminal off: parked thread windows get hidden once
+let markTimer = null;                       // the short hover wait before the swatch tray slides out
+const MARK_HOVER_MS = 550;
+function beginTaskDrag(e, title, titles, pins, dispatch) {
+  if (e.button !== 0 || e.detail > 1) return;
+  if (e.target.closest && e.target.closest(".notes, .news, .cp, .mkpop, a, .lk")) return;
+  const y0 = e.clientY;
+  let moved = false, list = titles;
+  const move = ev => {
+    if (!moved && Math.abs(ev.clientY - y0) < 5) return;
+    if (!moved) {
+      moved = true; taskDragged = true;
+      try { window.getSelection().removeAllRanges(); } catch (err) {}
+      document.body.style.userSelect = "none"; document.body.style.webkitUserSelect = "none"; document.body.style.cursor = "grabbing";
+    }
+    ev.preventDefault();
+    const rows = [...document.querySelectorAll("[data-task]")].filter(r => r.dataset.task !== title);
+    const at = rows.filter(r => { const b = r.getBoundingClientRect(); return b.top + b.height / 2 < ev.clientY; }).length;
+    const others = rows.map(r => r.dataset.task);
+    list = [...others.slice(0, at), title, ...others.slice(at)];
+    dispatch({ type: "TASK_DRAG", value: { title, list } });
+  };
+  const up = () => {
+    document.removeEventListener("mousemove", move);
+    document.removeEventListener("mouseup", up);
+    document.body.style.userSelect = ""; document.body.style.webkitUserSelect = ""; document.body.style.cursor = "";
+    try { window.getSelection().removeAllRanges(); } catch (err) {}
+    if (!moved) return;
+    setTimeout(() => { taskDragged = false; }, 0);   // after the click this release fires
+    dispatch({ type: "TASK_DRAG", value: null });
+    const newPins = list.filter(t => pins.includes(t));
+    const order = list.filter(t => !pins.includes(t));
+    try { localStorage.setItem(PIN_KEY, JSON.stringify(newPins)); localStorage.setItem(ORDER_KEY, JSON.stringify(order)); } catch (err) {}
+    dispatch({ type: "PINNED", value: newPins });
+    dispatch({ type: "TASK_ORDER", value: order });
+  };
+  document.addEventListener("mousemove", move);
+  document.addEventListener("mouseup", up);
 }
 
 // Brief + sources + what changed, then the remaining notes. Pasted into a cloud session the
@@ -1353,12 +1521,13 @@ const CRM_COS = ["All", "MSBAI", "Tam Fortis", "Nexcavate"];
 // What changed on a Do now line since you last pressed got it (crm_watch.py alert kinds).
 const CRM_WHY = { reply: "reply waiting", late: "past due", tpoc: "TPOC window", later: "resurfacing", ment: "named in a meeting", mail: "new email", nudge: "nudge ready" };
 // the same company colours the wiki uses (COMPANIES in wiki_build.py), so a dot means one thing everywhere
-const CRM_CO_DOT = { "MSBAI": "#7FB2FF", "Tam Fortis": "#FF9F5A", "Nexcavate": "#5ED3A1" };
-const CRM_TPOC = "#FF7AB6";   // TPOC windows: pink, apart from Tam Fortis orange and the violet of news
+const CRM_CO_DOT = { "MSBAI": "#7FB2FF", "Tam Fortis": "#5ED3A1", "Nexcavate": "#FFB547" };
+const CRM_TPOC = "#FF7AB6";   // TPOC windows: pink, apart from Nexcavate amber and the violet of news
 const CRM_TABS = [
   { key: "contracts", label: "Contracts", level: 1, tip: "Level 1: active contracts and projects, won work we have to keep" },
   { key: "leads", label: "Leads", level: 2, tip: "Level 2: warm and hot leads, people named in meetings, interested later, check ins" },
   { key: "proposals", label: "Proposals", level: 3, tip: "Level 3: outreach for active proposals, TPOCs first while pre release" },
+  { key: "campaigns", label: "Campaigns", tip: "Outreach for each open proposal (made on their own from the customer people the CRM links to it) plus your own lists, like the FAA roster" },
   { key: "partners", label: "Partners", level: 4, tip: "Level 4: partners a pursuit needs (national labs, hardware, teaming)" },
   { key: "people", label: "Rolodex", tip: "Everyone in the CRM, A to Z. Open a name for their card" },
   { key: "inbox", label: "Inbox", tip: "Email waiting on you with the CRM beside each thread, and nudges waiting in drafts" },
@@ -1373,7 +1542,7 @@ const CRM_UI_KEY = "msbai_crm_ui";
 // a function declaration, so initialState (higher up the file) can call it before this line runs
 // The top of the CRM tab is three cards (Key dates, Do now, Who has what). Each folds, and the grip
 // on its left slides it up or down; the order and folds are remembered.
-const CRM_SECS = { dates: "Key dates", donow: "Do now", team: "Who has what" };
+const CRM_SECS = { donow: "Do now", dates: "Key dates", team: "Who has what" };
 const CRM_SEC_ORDER = ["dates", "donow", "team"];
 let crmSecDragged = false;
 function beginCrmSecDrag(e, key, order, set) {
@@ -1402,11 +1571,13 @@ function beginCrmSecDrag(e, key, order, set) {
   document.addEventListener("mouseup", up);
 }
 function savedCrmUi() {
-  const d = { co: "All", tab: "contracts", mine: false, older: false, cal: true };
+  const d = { co: "All", tab: "inbox", mine: false, older: false, cal: true };
   let u = d;
   try { u = { ...d, ...JSON.parse(localStorage.getItem("msbai_crm_ui") || "{}") }; } catch (e) {}
   // Oct 6: Key dates moved to the top; an order saved before that starts over with it first
-  if (u.orderV !== 2) u = { ...u, order: ["dates", ...((u.order || []).filter(k => k !== "dates"))], orderV: 2 };
+  if (u.orderV !== 3) u = { ...u, order: ["dates", ...((u.order || []).filter(k => k !== "dates"))], orderV: 3 };
+  // Oct 7: the short lived Today tab is gone; anyone left on it lands on the Inbox below the overview
+  if (u.tab === "today" || u.flowV !== 2) u = { ...u, tab: u.tab === "today" || !u.tab ? "inbox" : u.tab, flowV: 2 };
   return u;
 }
 const crmNorm = s => String(s || "").toLowerCase().replace(/[^\w@.\s]/g, " ").replace(/\s+/g, " ").trim();
@@ -1425,6 +1596,7 @@ const crmFirst = n => String(n || "").split(/[ ,]/)[0];
 
 let crmRaw = "";
 const crmAsked = new Set();
+let crmPlusRaw = "";
 function parseCrm(block, prev) {
   const p = prev || { data: null, cards: {}, sync: "", alerts: {}, nudges: [], drafts: {}, ask: null };
   const next = { ...p, cards: { ...(p.cards || {}) } };
@@ -1450,6 +1622,9 @@ function parseCrm(block, prev) {
       if (!(p.ask && p.ask.busy)) { try { next.ask = JSON.parse(l.slice(4)); } catch (e) {} }
     } else if (l.startsWith("OUTBOX\t")) {
       try { next.outbox.push(JSON.parse(l.slice(7))); } catch (e) {}
+    } else if (l.startsWith("PLUS\t")) {
+      const t = l.slice(5);
+      if (t !== crmPlusRaw) { try { next.plus = JSON.parse(t); crmPlusRaw = t; } catch (e) {} }
     } else if (l.startsWith("CRMSYNC\t")) next.sync = l.slice(8);
   });
   const fileOps = new Set(next.outbox.map(o => o.title + "|" + o.op + "|" + (o.text || "")));
@@ -1842,10 +2017,11 @@ const CrmLoading = ({ label, small, co }) => (
       <span key={x} style={{ animationDelay: `${i * 1.5}s` }}><b />{x}</span>)}</div>}
   </div>
 );
-const CrmRow = ({ it, open, card, alert, drafts, ui, copied, ctx, dispatch }) => {
+const CrmRow = ({ it, open, card, alert, drafts, ui, copied, ctx, dispatch, page }) => {
   const toggle = () => {
-    dispatch({ type: "CRM_UI", value: { open: open ? "" : it.id } });
-    if (!open && !card && it.kind !== "email") crmCard(it, dispatch);
+    if (page) return;
+    dispatch({ type: "CRM_UI", value: { open: it.id, page: it.id } });
+    if (!card && it.kind !== "email") crmCard(it, dispatch);
   };
   const c = card && !card.busy && !card.error ? card : null;
   const dueTxt = it.kind === "proposal" && it.state === "submitted" ? "" : it.kind === "person" ? ""
@@ -1872,16 +2048,17 @@ const CrmRow = ({ it, open, card, alert, drafts, ui, copied, ctx, dispatch }) =>
     dispatch({ type: "COPIED", value: "src:" + it.id }); setTimeout(() => dispatch({ type: "COPIED", value: "" }), 2200);
   };
   return (
-    <div className={`r${open ? " on" : ""}${alert ? " notify" : ""}`}>
-      <div className="top" onClick={toggle}>
+    <div className={`r${open ? " on" : ""}${alert ? " notify" : ""}${page ? " inpage" : ""}`}>
+      {!page && <div className="top" onClick={toggle}>
         <span className="dot" style={{ background: CRM_CO_DOT[it.company] || GLASS.label }} title={it.company} />
         <span className="t"><span className="nt">{it.title}</span></span>
         <span className={`k ${it.kind}${it.heat ? " " + it.heat : ""}${it.kind === "mention" && !it.known ? " new" : ""}`}>
           {it.kind === "lead" ? it.heat : it.kind === "mention" && !it.known ? "new, meeting" : it.kind === "person" ? (it.tag || "person") : CRM_KIND[it.kind]}</span>
         {it.owner && <span className={`own${(it.overlap || []).length > 1 ? " two" : ""}`} title={`owner: ${it.owner}`}>{it.owner.split(",").map(o => crmFirst(o.trim())).join(" + ")}</span>}
         <span className={`when${late ? " late" : ""}`}>{dueTxt}</span>
-      </div>
-      <div className="meta">{crmMeta(it)}</div>
+      </div>}
+      {!page && <div className="meta">{crmMeta(it)}</div>}
+      {!page && it.kind === "proposal" && ctx.plus && ctx.plus.pursuits && ctx.plus.pursuits[it.id] && <CrmGate p={ctx.plus.pursuits[it.id]} />}
       {alert && (
         <div className="news">
           <div><span className="src">New</span>{alert.what}</div>
@@ -1901,7 +2078,8 @@ const CrmRow = ({ it, open, card, alert, drafts, ui, copied, ctx, dispatch }) =>
               {it.note && <div className="ln dim">{it.note}</div>}
             </div>
           )}
-          {people.length > 0 && it.kind !== "lead" && it.kind !== "person" && (
+          {it.kind === "proposal" && ctx.plus && ctx.plus.pursuits && ctx.plus.pursuits[it.id] && <CrmCustMap p={ctx.plus.pursuits[it.id]} />}
+          {people.length > 0 && it.kind !== "lead" && it.kind !== "person" && it.kind !== "proposal" && (
             <div className="blk">
               <div className="sh">People</div>
               <div className="ppl">
@@ -1980,11 +2158,14 @@ const CrmRow = ({ it, open, card, alert, drafts, ui, copied, ctx, dispatch }) =>
             </div>
           )}
           <div className="ap">
-            <CrmWrite it={it} ui={ui} outbox={ctx.outbox} dispatch={dispatch} />
+            {/* "Update the CRM" (mark done, follow up, remind me later, add note) is gone: OpenClaw
+                and the mail watchers keep ClickUp current on their own. CrmWrite stays defined
+                below in case it is ever wanted back. */}
             <div className="apg">
               <div className="ah"><span className="an">Reach out</span><span className="as">drafts wait in Gmail · nothing is sent</span></div>
               <div className="bts">
-                {!(card && card.busy) && it.kind !== "proposal" && <CrmDraftActs it={it} card={card} draft={drafts[it.id]} ui={ui} dispatch={dispatch} pill />}
+                {!(card && card.busy) && it.kind !== "proposal" && !crmRestrict(it, ctx.plus) && <CrmDraftActs it={it} card={card} draft={drafts[it.id]} ui={ui} dispatch={dispatch} pill />}
+                {crmRestrict(it, ctx.plus) && <span className="bt st" title={crmRestrict(it, ctx.plus)}><i>⦸</i>No direct contact: {crmRestrict(it, ctx.plus).replace(/\s*\(.*$/, "")}</span>}
                 <span className="bt b-claude" onClick={() => toClaude(crmBrief(it, card), dispatch)}><i>✦</i>Ask Claude</span>
                 <span className="bt b-copy" onClick={() => { run(`printf %s ${JSON.stringify(b64(crmBrief(it, card)))} | base64 -d | pbcopy`); dispatch({ type: "COPIED", value: "crm:" + it.id }); setTimeout(() => dispatch({ type: "COPIED", value: "" }), 2200); }}>
                   <i>⧉</i>{copied === "crm:" + it.id ? "Copied" : "Copy card"}</span>
@@ -2047,7 +2228,7 @@ const CrmCal = ({ cal, ui, dispatch }) => {
         </div>
         {agenda.length === 0 && <div className="ai dim">{sel ? "Nothing on this day." : "No key dates in the next 7 days."}</div>}
         {agenda.map((c, i) => (
-          <div key={i} className={`ai ${c.type}`} onClick={() => c.item && dispatch({ type: "CRM_UI", value: { open: c.item, tab: CRM_TAB_OF[c.level] || "contracts" } })}>
+          <div key={i} className={`ai ${c.type}`} onClick={() => c.item && dispatch({ type: "CRM_UI", value: { open: c.item, page: c.item, tab: CRM_TAB_OF[c.level] || "contracts" } })}>
             <i style={{ background: CRM_CO_DOT[c.company] || "#999" }} />
             {!sel && <span className="d">{crmWhen(c.date)}</span>}
             <span className="l">{c.label}</span>
@@ -2069,7 +2250,7 @@ const CrmFive = ({ top, cards, drafts, ui, outbox, maxH, dispatch }) => {
   const set = v => dispatch({ type: "CRM_UI", value: v });
   const drafted = top.filter(it => (drafts[it.id] || {}).url).length;
   const skipped = (ui.skip5 || []).length;
-  const open = it => set({ open: it.id, tab: CRM_TAB_OF[it.level] || "contracts", five: false });
+  const open = it => set({ open: it.id, page: it.id, tab: CRM_TAB_OF[it.level] || "contracts", five: false });
   return (
     <div className="five">
       <div className="fhint">The {top.length || "three"} most urgent here, each with a message ready. <b>Draft it in Gmail</b> puts it in your drafts; nothing is sent.
@@ -2107,10 +2288,6 @@ const CrmFive = ({ top, cards, drafts, ui, outbox, maxH, dispatch }) => {
               <div className="bts">
                 {it.kind !== "proposal" && <CrmDraftActs it={it} card={card} draft={drafts[it.id]} ui={ui} dispatch={dispatch} pill />}
                 <span className="bt" onClick={() => open(it)}><i>↗</i>Open full card</span>
-                {isFu && !closing && (confirm
-                  ? <span className="bt go" onClick={() => { crmQueue({ op: "close", task: it.id, item: it.id, title: it.title }, dispatch); set({ fiveDone: "" }); }}><i>✓</i>Yes, mark done in ClickUp</span>
-                  : <span className="bt" onClick={() => set({ fiveDone: it.id })}><i>✓</i>Mark done</span>)}
-                {closing && <span className="bt st"><i>✓</i>Marked done</span>}
                 <span className="bt" onClick={() => set({ skip5: [...(ui.skip5 || []), it.id], fiveDone: "" })}><i>→</i>Skip for now</span>
               </div>
             )}
@@ -2122,9 +2299,421 @@ const CrmFive = ({ top, cards, drafts, ui, outbox, maxH, dispatch }) => {
   );
 };
 
+// A listing opened as its own page, like a wiki article: a header with the essentials, the
+// proposal's timeline and gate when it has one, then the whole card. Back (or Esc) returns to the
+// list exactly where you left it.
+const CrmPage = ({ it, ctx, back, tabLabel, children }) => {
+  const p = it.kind === "proposal" && ctx.plus && ctx.plus.pursuits ? ctx.plus.pursuits[it.id] : null;
+  const due = it.kind === "interest" ? it.resurface : it.kind === "proposal" ? (it.final || it.due) : it.kind === "mention" ? it.date : it.due;
+  const dueTxt = it.kind === "person" || (it.kind === "proposal" && it.state === "submitted") ? "" : crmWhen(due);
+  const kind = it.kind === "lead" ? `${it.heat || ""} lead`.trim() : it.kind === "person" ? (it.tag || "person") : CRM_KIND[it.kind] || it.kind;
+  return (
+    <div className="pgw" tabIndex={-1}
+         ref={el => { if (el && el.dataset.f !== it.id) { el.dataset.f = it.id; el.focus(); el.scrollTop = 0; } }}
+         onKeyDown={e => { if (e.key === "Escape") back(); }}>
+      <div className="pgnav">
+        <span className="bk" onClick={back}><svg viewBox="0 0 10 10"><path d="M6.5 1.5L3 5l3.5 3.5" /></svg>{tabLabel}</span>
+        <span className="cr">{it.company}{(it.companies || []).length > 1 ? ` + ${it.companies.length - 1}` : ""}</span>
+      </div>
+      <div className="pghd">
+        <div className="pgk"><i style={{ background: CRM_CO_DOT[it.company] || GLASS.label }} />{kind}
+          {it.owner && <span className="po">{it.owner.split(",").map(o => crmFirst(o.trim())).join(" + ")}</span>}
+          {dueTxt && <span className={`pd${/late|yesterday/.test(dueTxt) ? " late" : ""}`}>{dueTxt}</span>}</div>
+        <div className="pgt">{it.title}</div>
+        {crmMeta(it) && <div className="pgm">{crmMeta(it)}</div>}
+      </div>
+      {p && (
+        <div className="pgs">
+          <div className="sh" style={{ display: "flex", alignItems: "baseline" }}><span>Timeline · {CRM_PHASE[p.phase] || "no date yet"}</span>
+            {(((ctx.plus && ctx.plus.campaigns) || []).find(c => c.pursuit === it.id)) &&
+              <span className="lk2" style={{ marginLeft: "auto" }} onClick={() => ctx.openCamp((ctx.plus.campaigns || []).find(c => c.pursuit === it.id).key)}>open the outreach campaign</span>}</div>
+          <CrmGate p={p} big />
+          {p.due && <div className="pgdl">
+            {[["7 weeks out, outreach starts", p.marks.start], ["21 days, draft review and letters", p.marks.d21],
+              ["14 days, bid gate", p.marks.d14], ["7 days, internal submit", p.marks.d7], ["Deadline", p.due]].map(([l, dt]) => (
+              <span key={l} className={crmDays(dt) < 0 ? "past" : ""}><b>{crmWhen(dt)}</b>{l}</span>))}
+          </div>}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+};
+
+// A campaign as its own page: the goal and the ask, the pipeline, and every target grouped by
+// stage, with the touches you can log for each. Stages update on their own from captured email,
+// calendar meetings and logged touches.
+const CRM_STAGE_COL = { found: "rgba(255,255,255,0.3)", contacted: "#64D2FF", replied: "#C9A8FF", met: "#5ED3A1", letter: "#F5D46B" };
+const CRM_TPOC_TXT = {
+  open: "Pre release: the one window when TPOCs can be contacted. Ask to meet before the topic opens, or who else in their organization we should talk to.",
+  closed: "The topic is open: no direct contact with TPOCs. Questions go through the official Q&A only. Keep working the other customer people.",
+  unknown: "Release state is not set in ClickUp. Check whether the topic is still in pre release before contacting a TPOC.",
+};
+const CRM_STAGE_TXT = { letter: "Letter of support in hand", met: "Met with us", replied: "Replied", contacted: "Contacted, no reply yet", found: "Not contacted yet" };
+const CrmCampaignPage = ({ c, copied, back, dispatch }) => {
+  const live = (c.targets || []).filter(t => !t.restrict), off = (c.targets || []).filter(t => t.restrict);
+  const n = Math.max(1, live.length), gl = crmDays(c.gate), dl = crmDays(c.due);
+  const brief = [`Help me run this outreach campaign: ${c.name}.`, c.goal ? `Goal: ${c.goal}` : "", c.ask ? `The ask: ${c.ask}` : "",
+    `Follow the MSBAI CRM Playbook: why this person, existing proof, one interesting question, one easy action, under 150 words, LinkedIn notes under 300 characters, no em dashes. If they cannot meet, ask who else in their organization we should talk to.`,
+    (c.tpoc || {}).window === "open" ? `TPOCs first, using the topic author script: we build [one clause]; three questions before the topic opens (what does the current approach get wrong, what would make a Phase I money well spent, which literature or datasets are the serious ones); then who else works this problem outside the review chain, and may we say they suggested it.` : "",
+    `Draft a first message for each person not contacted yet, and a follow up for each one contacted with no reply. Never write to a TPOC once the topic is open:`,
+    ...live.filter(t => (t.stage === "found" || t.stage === "contacted") && (t.type !== "tpoc" || (c.tpoc || {}).window === "open"))
+           .map(t => `- ${t.n}${t.type === "tpoc" ? " (TPOC)" : ""}${t.org ? ", " + t.org : ""}${t.fn ? ", " + t.fn : ""} (${t.stage})`)].filter(Boolean).join("\n");
+  return (
+    <div className="pgw" tabIndex={-1}
+         ref={el => { if (el && el.dataset.f !== c.key) { el.dataset.f = c.key; el.focus(); el.scrollTop = 0; } }}
+         onKeyDown={e => { if (e.key === "Escape") back(); }}>
+      <div className="pgnav">
+        <span className="bk" onClick={back}><svg viewBox="0 0 10 10"><path d="M6.5 1.5L3 5l3.5 3.5" /></svg>Campaigns</span>
+        <span className="cr">{c.company}</span>
+      </div>
+      <div className="pghd">
+        <div className="pgk"><i style={{ background: CRM_CO_DOT[c.company] || GLASS.label }} />{c.auto ? "campaign from a proposal" : "outreach campaign"}
+          {c.gate && <span className={`pd${gl != null && gl < 0 ? " late" : ""}`}>{gl >= 0 ? `gate in ${gl}d` : `gate passed`}{dl != null ? ` · due in ${dl}d` : ""}</span>}</div>
+        <div className="pgt">{c.name}</div>
+        {c.goal && <div className="pgm">{c.goal}</div>}
+        {c.ask && <div className="pgm"><b style={{ color: "#fff" }}>The ask</b> {c.ask}</div>}
+      </div>
+      <div className="pgs">
+        <div className="cpbig"><span className="cpb"><i className="tk" style={{ width: `${Math.round((c.talked || 0) / n * 100)}%` }} /></span>
+          <span className="cprn"><b>{c.talked || 0}</b> of {live.length} talked</span></div>
+        <div className="cpk">{CRM_STAGES.map(([k, l]) => <span key={k} className={`s-${k}`}><i />{(c.counts || {})[k] || 0} {l}</span>)}</div>
+        <div className="bts" style={{ marginTop: 10 }}>
+          <span className="bt go" onClick={() => toClaude(brief, dispatch)}><i>✦</i>Draft the outreach with Claude</span>
+          {c.pursuit && <span className="bt" onClick={() => dispatch({ type: "CRM_UI", value: { page: c.pursuit, open: c.pursuit, tab: "proposals" } })}><i>↗</i>Open the proposal</span>}
+          {c.doc && <span className="bt" onClick={() => openUrl(c.doc)}><i>↗</i>Plan</span>}
+        </div>
+      </div>
+      {(c.targets || []).some(t => t.type === "tpoc") && (
+        <div className={`pgs tpb w-${(c.tpoc || {}).window || "unknown"}`}>
+          <div className="sh"><i style={{ background: CRM_TYPE.tpoc[1] }} />TPOCs first · {(c.tpoc || {}).window === "open" ? "window open" : (c.tpoc || {}).window === "closed" ? "window closed" : "window unknown"}
+            {c.open ? <span className="tpo"> · topic opens {crmWhen(c.open)}</span> : null}</div>
+          <div className="tpr">{CRM_TPOC_TXT[(c.tpoc || {}).window || "unknown"]}</div>
+          {(c.targets || []).filter(t => t.type === "tpoc").map((t, i) => {
+            const locked = (c.tpoc || {}).window === "closed" || !!t.restrict;
+            return (
+              <div key={i} className={`tg s-${t.stage}${locked ? " off" : ""}`} title={t.restrict || ""}>
+                <span className="tn" onClick={() => t.url && openUrl(t.url)}>{t.n}</span>
+                <span className="tf">{[t.org, t.fn].filter(Boolean).join(" · ")}</span>
+                <span className="st2">{locked ? "no direct contact" : CRM_STAGE_TXT[t.stage]}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {CRM_STAGES.slice().reverse().map(([k]) => {
+        const xs = live.filter(t => t.stage === k && t.type !== "tpoc");
+        if (!xs.length) return null;
+        return (
+          <div key={k} className="pgs cst">
+            <div className="sh"><i style={{ background: CRM_STAGE_COL[k] }} />{CRM_STAGE_TXT[k]} · {xs.length}</div>
+            {xs.map((t, i) => (
+              <div key={i} className={`tg s-${t.stage}`}>
+                <span className="tn" title={t.inCrm ? "open in ClickUp" : "not in the CRM yet"} onClick={() => t.url && openUrl(t.url)}>{t.first ? "★ " : ""}{t.n}</span>
+                <span className="tf">{[t.org, t.fn].filter(Boolean).join(" · ")}{t.type && CRM_TYPE[t.type] ? <em style={{ color: CRM_TYPE[t.type][1] }}> {CRM_TYPE[t.type][0]}</em> : null}</span>
+                <span className="st2">{t.last ? crmWhen(t.last) : ""}{t.channels && t.channels.length ? ` · ${t.channels.join(", ")}` : ""}</span>
+              </div>
+            ))}
+          </div>
+        );
+      })}
+      {off.filter(t => t.type !== "tpoc").length > 0 && <div className="pgs cst">
+        <div className="sh">Off limits for this pursuit · {off.filter(t => t.type !== "tpoc").length}</div>
+        {off.filter(t => t.type !== "tpoc").map((t, i) => <div key={i} className="tg off" title={t.restrict}><span className="tn">{t.n}</span><span className="tf">{t.restrict.replace(/\s*\(.*$/, "")}</span></div>)}
+      </div>}
+      <div className="dbk" style={{ marginTop: 12 }}>Stages update on their own from captured email both ways and meetings on your calendar. LinkedIn and calls will join once OpenClaw logs them.</div>
+    </div>
+  );
+};
+
+// ── The playbook layer (crm_plus.py) ──
+// MSBAI Customer Outreach, Follow Up and CRM Playbook (Oct 7): talk to buyers and users before
+// drafting, three logged customer conversations by 14 days out, debrief every customer call, follow
+// up on a clock, and count it every week.
+const CRM_TYPE = { buyer: ["Buyer", "#8FD8FF"], user: ["End user", "#5ED3A1"], tpoc: ["TPOC", "#FF7AB6"],
+                   adjacent: ["Customer side", "#C9A8FF"], partner: ["Partner", "#FFB547"], peer: ["Peer", "#9AA4B2"], unknown: ["Not typed yet", "#6B7280"] };
+const CRM_PHASE = { shaping: "shaping, more than 7 weeks out", outreach: "customer outreach window", draft: "draft review and letters (21 days)",
+                    gate: "bid gate (14 days)", final: "internal submit (7 days)", past: "past the date" };
+const crmRestrict = (it, plus) => {
+  if (!plus || !plus.restrict) return "";
+  const n = crmNorm(crmPersonOf(it) || ((it.who || [])[0] || {}).name || "");
+  return (n && plus.restrict[n]) || "";
+};
+function crmPlusItems(plus, data, co) {
+  if (!plus) return [];
+  const out = [];
+  const items = (data && data.items) || [];
+  Object.entries(plus.pursuits || {}).forEach(([id, p]) => {
+    const it = items.find(x => x.id === id);
+    if (!it || !crmMatchCo(it, co) || p.days == null || p.days < 0) return;
+    if (p.gstate === "late" || p.gstate === "short") out.push({ id, kind: "gate", level: 3, company: it.company, owner: it.owner,
+      title: `${it.title}: ${p.gate} of 3 customer conversations`, pb: p.gstate === "late" ? "under the gate" : "gate soon",
+      pbTip: "the bid gate: three logged conversations with buyers, users, TPOCs or customer side people by 14 days out",
+      dueTxt: `${p.days}d left`, score: p.gstate === "late" ? 54 : 46 });
+  });
+  (plus.campaigns || []).forEach(c => {
+    const tp = c.tpoc || {};
+    if (tp.window === "open" && tp.fresh > 0) out.push({ id: "camp:" + c.key, kind: "campaign", company: c.company || "MSBAI",
+      title: `TPOC window open: ${tp.fresh} TPOC${tp.fresh === 1 ? "" : "s"} to contact for ${c.name}`, pb: "TPOC now",
+      pbTip: "TPOCs can only be contacted during pre release. Ask to meet before the topic opens, or who else we should talk to.",
+      dueTxt: c.open ? `opens ${crmWhen(c.open)}` : "", score: 70 });
+    const left = crmDays(c.gate);
+    const fresh = (c.targets || []).filter(t => t.stage === "found");
+    if (fresh.length && left != null && left >= 0 && left <= 10) out.push({ id: "camp:" + c.key, kind: "campaign", company: c.company || "MSBAI",
+      title: `${c.name}: ${fresh.length} not contacted yet`, pb: "campaign", pbTip: c.goal || "",
+      dueTxt: left >= 0 ? `gate in ${left}d` : "gate passed", score: 50 + Math.max(0, 10 - left) });
+  });
+  return out.filter(x => crmMatchCo(x, co));
+}
+// The timeline under a proposal row: 7 weeks out, 21, 14 and 7 days, the deadline, and where today
+// sits, with the bid gate meter beside it.
+const CrmGate = ({ p, big }) => {
+  if (!p.due) return <div className="gate"><span className="nd">No due date in ClickUp, so no timeline or gate yet</span></div>;
+  const pos = before => Math.max(0, Math.min(100, (49 - before) / 49 * 100));
+  const marks = [[49, "7 wk"], [21, "21d"], [14, "gate"], [7, "submit"], [0, "due"]];
+  return (
+    <div className={`gate${big ? " big" : ""}`} title={`${CRM_PHASE[p.phase] || ""} · due ${p.due}`}>
+      <span className="rail">
+        <i className="fill" style={{ width: `${pos(Math.max(0, p.days))}%` }} />
+        {marks.map(([b, l]) => <b key={b} style={{ left: `${pos(b)}%` }} className={p.days <= b ? "hit" : ""}><em>{l}</em></b>)}
+        {p.days >= 0 && p.days <= 49 && <span className="now" style={{ left: `${pos(p.days)}%` }} />}
+      </span>
+      <span className={`gm ${p.gstate}`}>
+        {[0, 1, 2].map(i => <i key={i} className={i < p.gate ? "on" : ""} />)}
+        <span>{p.gate}/3</span></span>
+    </div>
+  );
+};
+const CrmCustMap = ({ p }) => {
+  const groups = ["buyer", "user", "tpoc", "adjacent"];
+  const ppl = p.people || [];
+  const others = ppl.filter(x => !groups.includes(x.type));
+  const st = { talked: "talked", contacted: "contacted, no reply yet", none: "not contacted" };
+  return (
+    <div className="blk cmap">
+      <div className="sh">Customer map · {p.gate} of 3 conversations for the gate{p.days != null && p.days >= 0 ? ` · ${p.days} days left` : ""}</div>
+      {p.warn && <div className="warn">{p.warn}</div>}
+      <div className="cg">
+        {groups.map(g => {
+          const xs = ppl.filter(x => x.type === g);
+          return (
+            <div key={g} className={`cgc${xs.length ? "" : " empty"}`}>
+              <div className="cgh"><i style={{ background: CRM_TYPE[g][1] }} />{CRM_TYPE[g][0]} <b>{xs.length || ""}</b></div>
+              {xs.length === 0 && <div className="cgn">nobody yet</div>}
+              {xs.slice(0, 6).map((x, i) => (
+                <div key={i} className={`cp ${x.st}`} title={`${x.n}${x.title ? " · " + x.title : ""}${x.org ? " · " + x.org : ""} · ${st[x.st]}${x.last ? " · " + x.last : ""}`}
+                     onClick={() => x.url && openUrl(x.url)}><i />{x.n}</div>
+              ))}
+              {xs.length > 6 && <div className="cgn">+{xs.length - 6} more</div>}
+            </div>
+          );
+        })}
+      </div>
+      {others.length > 0 && <div className="cgo">Also linked: {others.length} {others.length === 1 ? "person" : "people"} who are other companies, researchers or not typed yet. They do not count toward the gate.</div>}
+      <div className="cgk"><span><i className="talked" />talked</span><span><i className="contacted" />contacted</span><span><i className="none" />not yet</span></div>
+    </div>
+  );
+};
+const CrmWeek = ({ plus, copied, dispatch }) => {
+  const w = (plus && plus.week) || null;
+  if (!w) return <div className="ai dim">The scoreboard fills in after the next CRM sync.</div>;
+  const pct = Math.min(100, Math.round((w.conversations || 0) / (w.goal || 10) * 100));
+  const txt = [`This week (since ${w.since}):`, `Conversations with outside people: ${w.conversations} of ${w.goal} (${w.customer} on the customer side)`,
+               `Outreach sent: ${w.outreach} · replies: ${w.replies} · LinkedIn and calls logged: ${w.touches}`,
+               `Overdue follow ups: ${w.overdue} · pursuits under the bid gate: ${w.gateShort}`].join("\n");
+  return (
+    <div className="wk">
+      <div className="wkm">
+        <div className="wkr"><span className="wkn">{w.conversations}</span><span className="wkg">of {w.goal} conversations this week</span>
+          <span className="wkc">{w.customer} customer side</span></div>
+        <div className="wkb"><i style={{ width: `${pct}%` }} /></div>
+      </div>
+      <div className="wkt">
+        <span><b>{w.outreach}</b>outreach</span><span><b>{w.replies}</b>replies</span><span><b>{w.touches}</b>LinkedIn, calls</span>
+        <span className={w.overdue ? "bad" : ""}><b>{w.overdue}</b>overdue</span><span className={w.gateShort ? "bad" : ""}><b>{w.gateShort}</b>under the gate</span>
+      </div>
+      <div className="wkx"><span className="lk2" onClick={() => copyText(txt, dispatch, "crm:week")}>{copied === "crm:week" ? "copied" : "copy for #bizdev"}</span></div>
+    </div>
+  );
+};
+function crmTouch(spec, dispatch) {
+  run(`${CRMSH} touch ${JSON.stringify(b64(JSON.stringify(spec)))}`).then(() => { dispatch({ type: "COPIED", value: "touch:" + spec.n }); setTimeout(() => dispatch({ type: "COPIED", value: "" }), 1800); crmTick(dispatch); });
+}
+function crmDebrief(spec, dispatch) {
+  run(`${CRMSH} debrief ${JSON.stringify(b64(JSON.stringify(spec)))}`).then(() => crmTick(dispatch));
+}
+const crmTick = dispatch => run(`${CRMSH} tick`).then(out => dispatch({ type: "CRM", value: out }));
+const crmDebForm = {};                       // what you typed in a debrief, kept between renders
+const CrmDebriefs = ({ plus, drafts, dispatch }) => {
+  const ms = (plus && plus.debriefs) || [];
+  if (!ms.length) return <div className="ai dim">No meetings with outside people waiting for a debrief.</div>;
+  return (
+    <div className="dbs">
+      {ms.map(m => {
+        const f = crmDebForm[m.key] = crmDebForm[m.key] || { want: "", need: "", next: "" };
+        const first = m.people[0] || { n: "" };
+        const tyIt = { id: "deb:" + m.key, kind: "person", title: first.n, company: "MSBAI", who: [{ name: first.n }], note: `Thank you note after "${m.title}"` };
+        const dr = drafts[tyIt.id] || {};
+        const save = () => crmDebrief({ key: m.key, title: m.title, want: f.want, need: f.need, next: f.next, company: "MSBAI",
+                                        people: m.people.map(p => ({ n: p.n, rel: p.rel || "" })) }, dispatch);
+        const field = (k, ph) => <input type="text" placeholder={ph} defaultValue={f[k]} onInput={e => { f[k] = e.target.value; }} />;
+        return (
+          <div key={m.key} className={`db${m.customer ? " cust" : ""}`}>
+            <div className="dbh"><b>{m.title}</b><span>ended {m.hours < 1 ? "just now" : `${Math.round(m.hours)}h ago`}{m.customer ? " · customer side" : ""}</span></div>
+            <div className="dbp">{m.people.slice(0, 8).map((p, i) => <span key={i} title={`${p.em} · ${(CRM_TYPE[p.type] || CRM_TYPE.unknown)[0]}`}>
+              <i style={{ background: (CRM_TYPE[p.type] || CRM_TYPE.unknown)[1] }} />{p.n}</span>)}{m.people.length > 8 ? <span>+{m.people.length - 8}</span> : null}</div>
+            <div className="dbf">
+              {field("want", "What do they say they want?")}
+              {field("need", "What do they actually need?")}
+              {field("next", "Next step, who and by when")}
+            </div>
+            <div className="bts">
+              <span className="bt go" onClick={save}><i>✓</i>Save debrief</span>
+              {dr.url ? <span className="bt" onClick={() => openUrl(dr.url)}><i>↗</i>Open thank you draft</span>
+                : <span className={`bt${dr.busy ? " st" : ""}`} onClick={() => !dr.busy && crmDraft(tyIt, dispatch, "", `A short thank you to everyone at "${m.title}". Thank them for their time, restate the one thing they want in a sentence, and say what we will send and when.${f.want ? " They said they want: " + f.want : ""}${f.next ? " Next step: " + f.next : ""}`)}>
+                    <i>✉</i>{dr.busy ? "Writing…" : "Thank you draft"}</span>}
+              <span className="bt" title="not a customer meeting, nothing to debrief" onClick={() => run(`${CRMSH} debrief-skip ${JSON.stringify(m.key)}`).then(() => crmTick(dispatch))}><i>→</i>Skip</span>
+            </div>
+            {dr.error && <div className="warn">{dr.error}</div>}
+          </div>
+        );
+      })}
+      <div className="dbk">Saved debriefs go on each person's Rolodex page and their ClickUp record. The thank you lands in Gmail drafts; you send it.</div>
+    </div>
+  );
+};
+const CRM_STAGES = [["found", "found"], ["contacted", "contacted"], ["replied", "replied"], ["met", "met"], ["letter", "letter"]];
+const CrmCampaigns = ({ plus, copied, dispatch }) => {
+  const cs = (plus && plus.campaigns) || [];
+  if (!cs.length) return <div className="ai dim">No campaigns yet. Every open proposal with customer people becomes one, and desk-widget/campaigns.json adds your own lists.</div>;
+  return (
+    <div className="cpo">
+      {cs.map(c => {
+        const n = Math.max(1, (c.targets || []).length - (c.offLimits || 0)), gl = crmDays(c.gate);
+        return (
+          <div key={c.key} className="cpr" onClick={() => dispatch({ type: "CRM_UI", value: { page: "camp:" + c.key } })}>
+            <div className="cprt"><i style={{ background: CRM_CO_DOT[c.company] || "#999" }} />
+              <span className="nm">{c.name}</span>
+              <span className={`src${c.auto ? "" : " own"}`}>{c.auto ? "from proposal" : "list"}</span>
+              {c.tpoc && c.tpoc.n > 0 && <span className={`tpc w-${c.tpoc.window}`} title={CRM_TPOC_TXT[c.tpoc.window]}>
+                {c.tpoc.n} TPOC{c.tpoc.n === 1 ? "" : "s"}{c.tpoc.window === "open" ? (c.tpoc.fresh ? ` · ${c.tpoc.fresh} to contact` : " · contacted") : c.tpoc.window === "closed" ? " · locked" : " · check window"}</span>}
+              <span className={`gd${gl != null && gl < 0 ? " past" : gl != null && gl <= 7 ? " soon" : ""}`}>{gl == null ? "no gate date" : gl >= 0 ? `gate in ${gl}d` : `gate passed ${-gl}d ago`}</span></div>
+            <div className="cprb">
+              <span className="cpb" title={`${c.talked || 0} of ${n} talked to`}><i className="tk" style={{ width: `${Math.round((c.talked || 0) / n * 100)}%` }} /></span>
+              <span className="cprn"><b>{c.talked || 0}</b>/{n} talked</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// The Settings page: sliders that change the widget live, each centered on the original setup,
+// with a preview card so you can see text, glass and tabs move as you drag.
+const SettingsView = ({ settings, height, dispatch }) => {
+  const st = settings;
+  const changed = SETTINGS.filter(x => Math.abs((st[x.k] != null ? st[x.k] : x.def) - x.def) > x.step / 2).length;
+  return (
+    <div className={`${panel} ${setCss}`} style={{ height, display: "flex", flexDirection: "column" }}>
+      <div className={head}>
+        <span>Settings</span>
+        <span className="v">{changed ? `${changed} changed · ` : "your original setup · "}
+          <span className="rs" onClick={() => resetSettings(dispatch)}>reset all</span> ·{" "}
+          <span className="rs" onClick={() => setView("desk", dispatch)}>done</span></span>
+      </div>
+      <div className="wrap">
+        <div className="sliders">
+          {SETTINGS.map(x => {
+            const v = st[x.k] != null ? st[x.k] : x.def;
+            const pct = (v - x.min) / (x.max - x.min) * 100;
+            const mid = (x.def - x.min) / (x.max - x.min) * 100;
+            const moved = Math.abs(v - x.def) > x.step / 2;
+            return (
+              <div key={x.k} className={`sl${moved ? " moved" : ""}`}>
+                <div className="top">
+                  <span className="nm" title="double-click to put this one back" onDoubleClick={() => setSetting(st, x.k, x.def, dispatch)}>{x.label}</span>
+                  <span className="val">{x.fmt(v)}</span>
+                </div>
+                <div className="track">
+                  <i className="fill" style={{ width: `${pct}%` }} />
+                  <i className="mid" style={{ left: `${mid}%` }} title="your original setup" />
+                  <input type="range" min={x.min} max={x.max} step={x.step} value={v}
+                         onInput={e => setSetting(st, x.k, parseFloat(e.target.value), dispatch)}
+                         onChange={e => setSetting(st, x.k, parseFloat(e.target.value), dispatch)}
+                         onDoubleClick={() => setSetting(st, x.k, x.def, dispatch)} />
+                </div>
+                <div className="hint">{x.hint}</div>
+              </div>
+            );
+          })}
+          <div className="foot">The mark on each track is your original setup. Double-click a slider or its name to snap back.</div>
+        </div>
+        <div className="preview">
+          <div className="ph">Preview</div>
+          <div className="tabsx" style={{ zoom: st.tabs }}><span className="on">desk</span><span>claude</span><span>crm</span><span>wiki</span></div>
+          <div className="card">
+            <div className="lbl">Tasks · 4 active</div>
+            <div className="tt">Send Kevin the GURU OnDemand details</div>
+            <div className="mt">[MSBAI] for Rinku · from Slack (Oct 5)</div>
+            <div className="nt">A note line, the size most of the widget reads at.</div>
+          </div>
+          <div className="card">
+            <div className="lbl">Calendar</div>
+            <div className="ev"><b>Collaborative Working Session</b><span>8:00 – 9:30</span></div>
+            <div className="ev alt"><b>Monday AI meeting</b><span>11:00 – 12:00</span></div>
+          </div>
+          <div className="scale">
+            {[9, 11, 13, 16].map(n => <span key={n} style={{ fontSize: `calc(${n}px * var(--msbfs, 1))` }}>Aa {n}</span>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+const setCss = css`
+  .rs { cursor: pointer; color: #fff; } .rs:hover { text-decoration: underline; text-underline-offset: 2px; }
+  .wrap { flex: 1; min-height: 0; display: flex; gap: 22px; overflow: auto; }
+  .sliders { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 16px; padding: 4px 2px 8px; }
+  .sl .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .sl .nm { font-size: 12.5px; font-weight: 700; color: #fff; cursor: default; }
+  .sl .val { font-size: 11.5px; font-weight: 800; color: ${GLASS.sub}; font-variant-numeric: tabular-nums; transition: color .2s; }
+  .sl.moved .val { color: ${ACCENT.cal}; }
+  .sl .hint { font-size: 10.5px; color: ${GLASS.label}; margin-top: 4px; }
+  .track { position: relative; height: 22px; margin-top: 4px; }
+  .track:before { content: ""; position: absolute; left: 0; right: 0; top: 9px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.12); }
+  .track .fill { position: absolute; left: 0; top: 9px; height: 4px; border-radius: 2px; pointer-events: none;
+                 background: linear-gradient(90deg, rgba(203,211,222,0.35), ${ACCENT.cal}); }
+  .track .mid { position: absolute; top: 5px; width: 2px; height: 12px; margin-left: -1px; border-radius: 1px; background: rgba(255,255,255,0.45); pointer-events: none; }
+  .track input { position: absolute; inset: 0; width: 100%; margin: 0; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer; }
+  .track input::-webkit-slider-runnable-track { height: 22px; background: transparent; }
+  .track input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: 3px; border-radius: 50%;
+    background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.45), 0 0 0 3px rgba(255,255,255,0.12); transition: transform .15s, box-shadow .15s; }
+  .track input:hover::-webkit-slider-thumb { transform: scale(1.12); box-shadow: 0 2px 10px rgba(0,0,0,0.5), 0 0 0 5px rgba(203,211,222,0.22); }
+  .track input:active::-webkit-slider-thumb { transform: scale(1.22); }
+  .foot { font-size: 10.5px; color: ${GLASS.label}; margin-top: auto; }
+  .preview { flex: 0 0 42%; min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 4px 2px 8px; }
+  .ph { font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: ${GLASS.label}; }
+  .tabsx { display: flex; align-self: flex-start; gap: 2px; padding: 2px; border-radius: 999px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); }
+  .tabsx span { padding: 3px 11px; border-radius: 999px; font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: ${GLASS.label}; }
+  .tabsx span.on { background: rgba(255,255,255,0.16); color: #fff; }
+  .card { padding: 12px 14px; border-radius: ${GLASS.radius}; background: ${GLASS.bg}; border: ${GLASS.border}; transition: border-radius .2s; }
+  .card .lbl { font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: ${GLASS.label}; margin-bottom: 7px; }
+  .card .tt { font-size: 13px; font-weight: 600; color: #fff; }
+  .card .mt { font-size: 11px; color: ${GLASS.sub}; margin-top: 2px; }
+  .card .nt { font-size: 11px; color: rgba(255,255,255,0.82); margin-top: 6px; padding-left: 9px; border-left: 1px solid ${GLASS.hair}; }
+  .card .ev { display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; padding: 5px 8px; border-radius: 7px;
+              background: rgba(127,178,255,0.22); border-left: 3px solid #7FB2FF; color: #fff; }
+  .card .ev + .ev { margin-top: 5px; }
+  .card .ev.alt { background: rgba(94,211,161,0.2); border-left-color: #5ED3A1; }
+  .card .ev span { color: ${GLASS.sub}; font-size: 10.5px; }
+  .scale { display: flex; align-items: baseline; gap: 14px; color: #fff; font-weight: 600; padding: 4px 2px; }
+`;
+
 const CrmView = ({ crm, ui, emails, mail, mailSync, me, copied, height, tasks, flow, openTasks, dispatch }) => {
   const outbox = (crm && crm.outbox) || [];
-  const ctx = { tasks, flow, openTasks, outbox };
+  const ctx = { tasks, flow, openTasks, outbox, plus: (crm && crm.plus) || null,
+                openCamp: key => dispatch({ type: "CRM_UI", value: { page: "camp:" + key, tab: "campaigns" } }) };
   // a follow up you closed here leaves Do now and the lists at once, before ClickUp confirms it
   const closedHere = new Set(outbox.filter(o => o.op === "close" && o.status !== "failed").map(o => o.item));
   const data = (crm && crm.data) || null;
@@ -2132,7 +2721,7 @@ const CrmView = ({ crm, ui, emails, mail, mailSync, me, copied, height, tasks, f
   const alerts = (crm && crm.alerts) || {};
   const drafts = (crm && crm.drafts) || {};
   const set = v => dispatch({ type: "CRM_UI", value: v });
-  const co = ui.co || "All", tab = ui.tab || "contracts";
+  const co = ui.co || "All", tab = ui.tab && ui.tab !== "today" ? ui.tab : "inbox";
   const people = (data && data.people) || {};
   const alertOf = {};
   Object.values(alerts).forEach(a => { if (a && a.item) alertOf[a.item] = a; });
@@ -2151,10 +2740,12 @@ const CrmView = ({ crm, ui, emails, mail, mailSync, me, copied, height, tasks, f
   const visible = it => crmMatchCo(it, co) && (!ui.mine || it.owner == null || crmIsMine(it, me))
     && (!ui.owner || String(it.owner || "").includes(ui.owner));
   const all = ((data && data.items) || []).concat(mailItems).filter(visible).filter(it => !closedHere.has(it.id)).map(it => ({ ...it, score: crmScore(it) }));
-  const ranked = all.filter(it => it.score >= 30).sort((a, b) => b.score - a.score);
+  const plus = (crm && crm.plus) || null;
+  const plusItems = crmPlusItems(plus, data, co);
+  const ranked = all.filter(it => it.score >= 30).concat(plusItems).sort((a, b) => b.score - a.score);
   const doNow = ranked.slice(0, 5);
   // one per person, so two follow ups about the same conversation do not take two of the three spots
-  const fiveTop = ranked.filter(it => it.kind !== "email" && it.kind !== "proposal" && !(ui.skip5 || []).includes(it.id))
+  const fiveTop = ranked.filter(it => it.kind !== "email" && it.kind !== "proposal" && !it.pb && !(ui.skip5 || []).includes(it.id))
     .filter((it, i, xs) => { const w = crmNorm(((it.who || [])[0] || {}).name || it.id); return xs.findIndex(x => crmNorm(((x.who || [])[0] || {}).name || x.id) === w) === i; })
     .slice(0, 3);
   // five minute mode asks for the cards it needs once, after this render (never dispatch mid render)
@@ -2179,7 +2770,23 @@ const CrmView = ({ crm, ui, emails, mail, mailSync, me, copied, height, tasks, f
     rows = all.filter(it => it.kind !== "email" && it.level === t.level && (ui.older || !it.stale));
     if (ui.day) { const ids = new Set(cal.filter(c => c.date === ui.day).map(c => c.item)); rows = rows.filter(it => ids.has(it.id)); }
     rows.sort((a, b) => (alertOf[b.id] ? 1 : 0) - (alertOf[a.id] ? 1 : 0) || b.score - a.score || String(a.due || "9").localeCompare(String(b.due || "9")));
+    // Proposals tab: the proposals themselves come first, the ones with a live timeline on top
+    // (soonest due first, then the ones that slipped past due, then no date yet, then submitted).
+    // Items that only relate to a proposal (names from a meeting, confirm a result) sit underneath.
+    if (t.level === 3) {
+      const grp = it => {
+        if (it.kind !== "proposal") return 9;
+        if (it.state === "submitted") return 5;
+        const d = crmDays(it.final || it.due);
+        return d == null ? 2 : d >= 0 ? 0 : 1;
+      };
+      const dueOf = it => String(it.final || it.due || "");
+      rows.sort((a, b) => grp(a) - grp(b)
+        || (grp(a) === 0 ? dueOf(a).localeCompare(dueOf(b)) : grp(a) === 1 ? dueOf(b).localeCompare(dueOf(a)) : 0)
+        || (alertOf[b.id] ? 1 : 0) - (alertOf[a.id] ? 1 : 0) || b.score - a.score);
+    }
   }
+  const propN = t.level === 3 ? rows.filter(it => it.kind === "proposal").length : rows.length;
   const olderN = t.level ? all.filter(it => it.level === t.level && it.stale).length : 0;
   const replies = all.filter(it => it.kind === "reply").sort((a, b) => b.score - a.score);
   const inboxMail = emails.filter(m => m.practice || crmMatchCo({ company: m.company }, co));
@@ -2195,12 +2802,18 @@ const CrmView = ({ crm, ui, emails, mail, mailSync, me, copied, height, tasks, f
     .filter(r => co === "All" || (r.c || []).includes(co))
     .filter(r => !ui.pq || r.n.toLowerCase().includes(ui.pq.toLowerCase()) || (r.pursuits || []).join(" ").toLowerCase().includes(ui.pq.toLowerCase()));
   const letters = [...new Set(roster.map(r => (r.n.replace(/^[^A-Za-z]+/, "")[0] || "#").toUpperCase()))].sort();
+  // the listing open as a page: anything in the lists, or a person from the Rolodex
   const personItem = r => ({
     id: "p:" + ((r.rel || [])[0] || r.con || crmNorm(r.n).replace(/\s+/g, "-")), kind: "person", level: r.lv || 0, title: r.n,
     company: (r.c || [])[0] || "MSBAI", companies: r.c, roles: r.roles, pursuits: r.pursuits, heat: r.heat, email: r.email,
     tag: [LV[r.lv], r.heat].filter(Boolean).join(" · ") || "person",
     rel: (r.rel || [])[0] || "", con: r.con || "",
     who: [{ name: r.n }], url: (r.rel || [])[0] ? `https://app.clickup.com/t/${r.rel[0]}` : r.con ? `https://app.clickup.com/t/${r.con}` : "" });
+  const pageCamp = String(ui.page || "").startsWith("camp:")
+    ? (((crm && crm.plus && crm.plus.campaigns) || []).find(c => "camp:" + c.key === ui.page) || null) : null;
+  const pageIt = !ui.page || pageCamp ? null
+    : all.find(x => x.id === ui.page)
+      || (String(ui.page).startsWith("p:") ? (((data && data.roster) || []).map(personItem).find(x => x.id === ui.page) || null) : null);
   // The level pills. They sit below the sections; once they scroll out of view, a copy floats at the
   // top of the scroll area (no box: the page fades out under it instead), and picking one there jumps
   // to the start of that list.
@@ -2212,7 +2825,7 @@ const CrmView = ({ crm, ui, emails, mail, mailSync, me, copied, height, tasks, f
           set({ tab: x.key, open: "" });
           if (sc && mk) { const dy = mk.getBoundingClientRect().top - sc.getBoundingClientRect().top; if (dy < 0) sc.scrollTop += dy; }
         }}>
-          {x.label} <b>{x.level ? count(x.level) : x.key === "people" ? (((data && data.roster) || []).filter(r => co === "All" || (r.c || []).includes(co)).length || "") : inboxN}</b></span>
+          {x.label} <b>{x.level ? count(x.level) : x.key === "campaigns" ? (((crm && crm.plus && crm.plus.campaigns) || []).filter(c => co === "All" || c.company === co).length || "") : x.key === "people" ? (((data && data.roster) || []).filter(r => co === "All" || (r.c || []).includes(co)).length || "") : inboxN}</b></span>
       ))}
       {ui.owner && <span className="dayf" onClick={() => set({ owner: "" })}>{crmFirst(ui.owner)} ×</span>}
       {ui.day && <span className="dayf" onClick={() => set({ day: "" })}>{crmWhen(ui.day)} ×</span>}
@@ -2251,7 +2864,14 @@ const CrmView = ({ crm, ui, emails, mail, mailSync, me, copied, height, tasks, f
       )}
       {/* everything under the header scrolls as one page, so a tall section (five minute mode, an
           open card) never hides what is below it */}
-      <div className="crmwrap" style={{ flex: 1, minHeight: 0, position: "relative", display: "flex", flexDirection: "column" }}>
+      {pageIt && (
+        <CrmPage it={pageIt} ctx={ctx} back={() => set({ page: "", open: "" })} tabLabel={(CRM_TABS.find(x => x.key === tab) || {}).label || "CRM"}>
+          <CrmRow key={"pg" + pageIt.id} it={pageIt} open page card={cards[pageIt.id]} alert={alertOf[pageIt.id]}
+                  drafts={drafts} ui={{ ...ui, open: pageIt.id }} copied={copied} ctx={ctx} dispatch={dispatch} />
+        </CrmPage>
+      )}
+      {pageCamp && <CrmCampaignPage c={pageCamp} copied={copied} back={() => set({ page: "", tab: "campaigns" })} dispatch={dispatch} />}
+      <div className="crmwrap" style={{ flex: 1, minHeight: 0, position: "relative", display: pageIt || pageCamp ? "none" : "flex", flexDirection: "column" }}>
       {data && pills("lv lvfloat")}
       <div className="crmscroll" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", marginRight: -10, paddingRight: 10 }}
            ref={el => { if (el && !el.dataset.sl) { el.dataset.sl = "1"; el.addEventListener("scroll", () => crmStick(el), { passive: true }); } if (el) setTimeout(() => crmStick(el), 0); }}>
@@ -2259,10 +2879,13 @@ const CrmView = ({ crm, ui, emails, mail, mailSync, me, copied, height, tasks, f
       {data && (
         <div className="top2 secs">
           {(() => {
-            const order = [...(ui.order || []).filter(k => CRM_SECS[k]), ...CRM_SEC_ORDER.filter(k => !(ui.order || []).includes(k))];
+            const saved = (ui.order || []).filter(k => CRM_SECS[k]);
+            const order = saved.slice();
+            CRM_SEC_ORDER.forEach((k, i) => { if (!order.includes(k)) order.splice(Math.min(i, order.length), 0, k); });
             const fold = ui.fold || {};
             const mv = (k, d) => { const o = order.slice(), i = o.indexOf(k), j = i + d; if (j < 0 || j >= o.length) return; o[i] = o[j]; o[j] = k; set({ order: o }); };
             const late = Object.values(team).reduce((a, v) => a + (v.late || 0), 0);
+            const pw = (plus && plus.week) || {};
             const sum = { dates: `${(cal || []).length || ""} dates`.trim(), donow: `${doNow.length} to do`,
                           team: `${Object.keys(team).length} people${late ? `, ${late} late` : ""}` };
             const body = {
@@ -2272,13 +2895,16 @@ const CrmView = ({ crm, ui, emails, mail, mailSync, me, copied, height, tasks, f
                   {doNow.length === 0 && <div className="ai dim">Nothing urgent in this view.</div>}
                   {doNow.map((it, i) => (
                     <div key={it.id} className="ai" onClick={() => it.kind === "email" ? set({ tab: "inbox" })
-                      : set({ open: it.id, tab: CRM_TAB_OF[it.level] || "contracts" })}>
+                      : it.kind === "campaign" ? set({ page: it.id })
+                      : it.kind === "debrief" ? set({ fold: { ...(ui.fold || {}), [it.kind]: false } })
+                      : set({ open: it.id, page: it.id, tab: CRM_TAB_OF[it.level] || "contracts" })}>
                       <span className="nn">{i + 1}</span>
                       <i style={{ background: CRM_CO_DOT[it.company] || "#999" }} />
                       <span className="l">{it.kind === "email" ? `Reply to ${it.who[0].name}: ${it.title}` : it.title}</span>
                       {alertOf[it.id] && <span className={`why w-${String(alertOf[it.id].key || "").split(":")[0]}`} title={alertOf[it.id].what}>{CRM_WHY[String(alertOf[it.id].key || "").split(":")[0]] || "new"}</span>}
+                      {it.pb && <span className={`why pb-${it.kind}`} title={it.pbTip || ""}>{it.pb}</span>}
                       {it.owner && <span className="o">{it.owner.split(",").map(o => crmFirst(o.trim())).join(" + ")}</span>}
-                      <span className="d">{it.kind === "email" ? (it.when ? dayShort(it.when) : "") : crmWhen(it.due)}</span>
+                      <span className="d">{it.kind === "email" ? (it.when ? dayShort(it.when) : "") : it.pb ? (it.dueTxt || "") : crmWhen(it.due)}</span>
                     </div>
                   ))}
                 </div>
@@ -2330,8 +2956,11 @@ const CrmView = ({ crm, ui, emails, mail, mailSync, me, copied, height, tasks, f
         {tab === "people" && roster.filter(r => !ui.pl || (r.n.replace(/^[^A-Za-z]+/, "")[0] || "#").toUpperCase() === ui.pl).map(r => row(personItem(r)))}
         {tab === "people" && roster.length === 0 && <div className="empty">{data && data.roster ? "Nobody matches." : "The Rolodex fills in on the next good CRM sync."}</div>}
         {t.level && rows.length === 0 && <div className="empty">{ui.day ? "Nothing at this level on that day." : "Nothing here in this view."}</div>}
-        {t.level && rows.map(row)}
+        {t.level && rows.slice(0, propN).map(row)}
+        {t.level && rows.length > propN && <div className="grph">From meetings and follow ups</div>}
+        {t.level && rows.slice(propN).map(row)}
         {t.level && olderN > 0 && <div className="more" onClick={() => set({ older: !ui.older })}>{ui.older ? "hide older" : `show ${olderN} older (submitted long ago, paused)`}</div>}
+        {tab === "campaigns" && <CrmCampaigns plus={plus && { ...plus, campaigns: (plus.campaigns || []).filter(c => co === "All" || c.company === co) }} copied={copied} dispatch={dispatch} />}
         {tab === "inbox" && replies.map(row)}
         {tab === "inbox" && nudges.length > 0 && <div className="ih"><span>Nudges waiting in your drafts · {nudges.length}</span></div>}
         {tab === "inbox" && nudges.map(n => (
@@ -2367,11 +2996,149 @@ function crmStick(sc) {
   if (fl && stuck) wrap.style.setProperty("--lvh", fl.offsetHeight + "px");
 }
 const crmCss = css`
+  /* ── a listing as a page ── */
+  .pgw { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; outline: none; margin-right: -10px; padding: 2px 10px 18px 0;
+         animation: pgIn .28s cubic-bezier(.2,.85,.25,1) both; }
+  @keyframes pgIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+  .pgnav { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .pgnav .bk { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px 4px 8px; border-radius: 999px; cursor: pointer; font-size: 11px; font-weight: 700;
+               color: ${GLASS.sub}; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); transition: background .15s, color .15s; }
+  .pgnav .bk:hover { color: #fff; background: rgba(255,255,255,0.13); }
+  .pgnav .bk svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .pgnav .cr { font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: ${GLASS.label}; }
+  .pghd { padding-bottom: 12px; border-bottom: 1px solid ${GLASS.hair}; }
+  .pgk { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: ${GLASS.sub}; }
+  .pgk > i { width: 8px; height: 8px; border-radius: 50%; }
+  .pgk .po { padding: 1px 7px; border-radius: 6px; background: rgba(255,255,255,0.08); letter-spacing: .3px; text-transform: none; font-size: 10.5px; }
+  .pgk .pd { margin-left: auto; letter-spacing: .3px; text-transform: none; font-size: 11px; color: ${GLASS.sub}; }
+  .pgk .pd.late { color: #FF5F5F; }
+  .pgt { font-size: 19px; font-weight: 700; line-height: 1.25; letter-spacing: -0.2px; margin-top: 6px; }
+  .pgm { font-size: 12px; color: ${GLASS.sub}; margin-top: 5px; line-height: 1.45; }
+  .pgs { margin-top: 14px; }
+  .pgdl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .pgdl span { flex: 1 1 120px; padding: 6px 8px; border-radius: 9px; background: rgba(255,255,255,0.045); font-size: 10.5px; color: ${GLASS.label}; line-height: 1.3; }
+  .pgdl span b { display: block; font-size: 12px; color: #fff; font-weight: 700; }
+  .pgdl span.past { opacity: .55; }
+  .r.inpage { padding: 0; background: none !important; }
+  .r.inpage .card { margin-left: 0; font-size: 12.5px; }
+  .gate.big { margin: 10px 0 8px; }
+  .gate.big .rail { height: 6px; margin-bottom: 16px; }
+  .gate.big .rail b { top: -2px; height: 10px; }
+  .gate.big .rail b em { top: 12px; font-size: 9.5px; }
+  .gate.big .rail .now { top: -3px; width: 12px; height: 12px; margin-left: -6px; }
+  .gate.big .gm { font-size: 12px; margin-bottom: 16px; } .gate.big .gm i { width: 12px; height: 12px; }
+  .cpo { display: flex; flex-direction: column; gap: 4px; }
+  .cpr { padding: 7px 9px; border-radius: 10px; cursor: pointer; transition: background .15s; }
+  .cpr:hover { background: rgba(255,255,255,0.06); }
+  .cprt { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+  .cprt > i { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; }
+  .cprt .nm { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .cprt .src { flex: 0 0 auto; font-size: 9px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; color: ${GLASS.label};
+               padding: 0 5px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.14); }
+  .cprt .src.own { color: #C9A8FF; border-color: rgba(201,168,255,0.4); }
+  .cprt .gd { margin-left: auto; flex: 0 0 auto; font-size: 10.5px; color: ${GLASS.label}; }
+  .cprt .gd.soon { color: #FF9CA0; } .cprt .gd.past { color: #FF5F5F; }
+  .cprb { display: flex; align-items: center; gap: 10px; margin-top: 6px; padding-left: 14px; }
+  .cprb .cpb { flex: 1; margin-top: 0; height: 5px; }
+  .cprn { flex: 0 0 auto; font-size: 10.5px; color: ${GLASS.label}; } .cprn b { color: #fff; }
+  .cpb .tk { display: block; height: 100%; min-width: 0; border-radius: inherit; background: linear-gradient(90deg, #4CB4FF, #8FD8FF);
+             box-shadow: 0 0 8px rgba(76,180,255,0.45); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+  .cpbig { display: flex; align-items: center; gap: 12px; } .cpbig .cpb { flex: 1; height: 8px; margin-top: 0; border-radius: 4px; }
+  .cst .sh { display: flex; align-items: center; gap: 6px; } .cst .sh i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+  .cst .tg { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto auto; }
+  .tg .st2 { font-size: 10px; color: ${GLASS.label}; white-space: nowrap; }
+  .tg .tf em { font-style: normal; font-size: 10px; font-weight: 700; }
+  .tg .lg.on { opacity: .55; } .tg:hover .lg.on { opacity: 1; }
+  .tg.off { opacity: .55; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+  .cprt .tpc { flex: 0 0 auto; font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 5px; color: #FF7AB6; border: 1px solid rgba(255,122,182,0.45); }
+  .cprt .tpc.w-open { background: rgba(255,122,182,0.14); box-shadow: 0 0 10px rgba(255,122,182,0.25); }
+  .cprt .tpc.w-closed { color: ${GLASS.label}; border-color: rgba(255,255,255,0.14); }
+  .tpb { padding: 10px 11px; border-radius: 12px; border: 1px solid rgba(255,122,182,0.35); background: rgba(255,122,182,0.06); }
+  .tpb.w-closed { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); }
+  .tpb.w-unknown { border-color: rgba(245,212,107,0.4); background: rgba(245,212,107,0.05); }
+  .tpb .sh { display: flex; align-items: center; gap: 6px; } .tpb .sh i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .tpb .tpo { font-weight: 700; letter-spacing: 0; text-transform: none; }
+  .tpb .tpr { font-size: 11.5px; color: rgba(255,255,255,0.8); margin: 2px 0 8px; line-height: 1.45; }
+  .why.pb-campaign { white-space: nowrap; }
+  /* ── playbook layer ── */
+  .why.pb-gate { color: #FF9CA0; border-color: rgba(255,156,160,0.45); background: rgba(255,156,160,0.08); }
+  .why.pb-debrief { color: ${ACCENT.heads}; border-color: rgba(245,212,107,0.45); background: rgba(245,212,107,0.08); }
+  .why.pb-campaign { color: #C9A8FF; border-color: rgba(201,168,255,0.45); background: rgba(201,168,255,0.08); }
+  .gate { display: flex; align-items: center; gap: 12px; margin: 7px 0 2px 15px; }
+  .gate .nd { font-size: 10.5px; color: ${GLASS.label}; }
+  .gate .rail { position: relative; flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); margin: 0 4px 12px; }
+  .gate .rail .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: linear-gradient(90deg, rgba(203,211,222,0.25), rgba(203,211,222,0.7)); }
+  .gate .rail b { position: absolute; top: -2px; width: 2px; height: 8px; margin-left: -1px; border-radius: 1px; background: rgba(255,255,255,0.25); }
+  .gate .rail b.hit { background: rgba(255,255,255,0.7); }
+  .gate .rail b em { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 8.5px; color: ${GLASS.label}; white-space: nowrap; }
+  .gate .rail .now { position: absolute; top: -3px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,0.18); }
+  .gm { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 800; color: ${GLASS.sub}; margin-bottom: 12px; }
+  .gm i { width: 9px; height: 9px; border-radius: 3px; background: rgba(255,255,255,0.12); }
+  .gm i.on { background: #5ED3A1; }
+  .gm span { margin-left: 4px; }
+  .gm.ok span { color: #5ED3A1; } .gm.short span { color: #FF9CA0; } .gm.late span { color: #FF5F5F; }
+  .gm.late i:not(.on) { background: rgba(255,95,95,0.35); }
+  .cmap .cg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+  .cgc { padding: 7px 8px; border-radius: 9px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); min-width: 0; }
+  .cgc.empty { border-style: dashed; }
+  .cgh { display: flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: ${GLASS.sub}; margin-bottom: 4px; }
+  .cgh i { width: 7px; height: 7px; border-radius: 50%; } .cgh b { margin-left: auto; color: #fff; }
+  .cgn { font-size: 10.5px; color: ${GLASS.label}; }
+  .cmap .cp { display: flex; align-items: center; gap: 5px; font-size: 11px; color: rgba(255,255,255,0.88); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; padding: 1px 0; }
+  .cmap .cp:hover { color: #fff; }
+  .cmap .cp i, .cgk i { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.18); display: inline-block; }
+  .cmap .cp.talked i, .cgk i.talked { background: #5ED3A1; } .cmap .cp.contacted i, .cgk i.contacted { background: #64D2FF; }
+  .cgo { font-size: 10.5px; color: ${GLASS.label}; margin-top: 6px; }
+  .cgk { display: flex; gap: 12px; font-size: 10px; color: ${GLASS.label}; margin-top: 6px; } .cgk span { display: inline-flex; align-items: center; gap: 4px; }
+  .wk { padding: 2px 2px 4px; }
+  .wkr { display: flex; align-items: baseline; gap: 8px; }
+  .wkn { font-size: 26px; font-weight: 800; line-height: 1; } .wkg { font-size: 12px; color: ${GLASS.sub}; } .wkc { margin-left: auto; font-size: 11px; color: ${GLASS.label}; }
+  .wkb { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.1); margin-top: 7px; overflow: hidden; }
+  .wkb i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #5ED3A1, #8FD8FF); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+  .wkt { display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
+  .wkt span { flex: 1 1 0; min-width: 64px; padding: 6px 8px; border-radius: 9px; background: rgba(255,255,255,0.05); font-size: 10px; color: ${GLASS.label}; }
+  .wkt b { display: block; font-size: 15px; color: #fff; font-weight: 800; }
+  .wkt span.bad b { color: #FF5F5F; }
+  .wkx { margin-top: 6px; text-align: right; }
+  .lk2 { font-size: 10.5px; font-weight: 700; color: ${ACCENT.link}; cursor: pointer; } .lk2:hover { color: #fff; }
+  .dbs .db { padding: 9px 10px; border-radius: 11px; background: rgba(255,255,255,0.045); border: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px; }
+  .dbs .db.cust { border-color: rgba(245,212,107,0.4); }
+  .dbh { display: flex; gap: 8px; align-items: baseline; } .dbh b { font-size: 12.5px; } .dbh span { margin-left: auto; font-size: 10.5px; color: ${GLASS.label}; white-space: nowrap; }
+  .dbp { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 5px; font-size: 11px; color: ${GLASS.sub}; }
+  .dbp span { display: inline-flex; align-items: center; gap: 4px; } .dbp i { width: 6px; height: 6px; border-radius: 50%; }
+  .dbf { display: grid; gap: 5px; margin-top: 8px; }
+  .dbf input { width: 100%; box-sizing: border-box; padding: 6px 9px; border-radius: 8px; font: inherit; font-size: 12px; color: #fff; outline: none;
+               background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); }
+  .dbf input:focus { border-color: rgba(245,212,107,0.6); }
+  .dbs .bts { margin-top: 8px; }
+  .dbk { font-size: 10.5px; color: ${GLASS.label}; margin-top: 4px; }
+  .cp1 { margin-bottom: 6px; }
+  .cph { display: flex; gap: 10px; align-items: baseline; } .cph b { font-size: 12.5px; } .cph span { font-size: 10.5px; color: ${GLASS.label}; } .cph .lk2 { margin-left: auto; }
+  .cpg { font-size: 11px; color: ${GLASS.sub}; margin-top: 3px; }
+  .cpb { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: rgba(255,255,255,0.08); margin-top: 8px; }
+  .cpb i { height: 100%; transition: width .5s; }
+  .s-found i, .cpb .s-found { background: rgba(255,255,255,0.22); } .s-contacted i, .cpb .s-contacted { background: #64D2FF; }
+  .s-replied i, .cpb .s-replied { background: #C9A8FF; } .s-met i, .cpb .s-met { background: #5ED3A1; } .s-letter i, .cpb .s-letter { background: ${ACCENT.heads}; }
+  .cpk { display: flex; gap: 10px; flex-wrap: wrap; font-size: 10px; color: ${GLASS.label}; margin-top: 5px; }
+  .cpk span { display: inline-flex; align-items: center; gap: 4px; } .cpk i { width: 7px; height: 7px; border-radius: 2px; display: inline-block; }
+  .cpt { margin-top: 8px; display: flex; flex-direction: column; }
+  .tg { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) auto auto; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 7px; font-size: 11.5px; }
+  .tg:hover { background: rgba(255,255,255,0.05); }
+  .tg .tn { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+  .tg .tf { color: ${GLASS.label}; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tg .st { font-size: 9.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; padding: 1px 6px; border-radius: 5px; background: rgba(255,255,255,0.07); color: ${GLASS.sub}; white-space: nowrap; }
+  .tg .st.s-contacted { color: #64D2FF; } .tg .st.s-replied { color: #C9A8FF; } .tg .st.s-met { color: #5ED3A1; } .tg .st.s-letter { color: ${ACCENT.heads}; }
+  .tg .lg { display: flex; gap: 3px; opacity: 0; transition: opacity .15s; } .tg:hover .lg { opacity: 1; }
+  .tg .lg span { font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px; cursor: pointer; color: ${GLASS.sub}; background: rgba(255,255,255,0.07); }
+  .tg .lg span:hover { color: #fff; background: rgba(255,255,255,0.15); }
+  .tg .lg em { font-style: normal; font-size: 10px; color: #5ED3A1; font-weight: 700; }
   .tabs .tab { display: inline-flex; align-items: center; gap: 4px; }
   .cd { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
   .nb { color: ${ACCENT.notify}; font-weight: 800; }
-  .v.bad { color: #FF9F0A; }
+  .v.bad { color: #FF5F5F; }
   .empty { font-size: 12px; color: ${GLASS.label}; padding: 8px; }
+  .grph { font-size: 9.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: ${GLASS.label};
+          margin: 16px 2px 6px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
   .dim { color: ${GLASS.label}; }
   .top2 { flex: 0 0 auto; }
   .sec { display: flex; align-items: baseline; gap: 10px; font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
@@ -2426,24 +3193,24 @@ const crmCss = css`
   .fhint { font-size: 11px; color: ${GLASS.label}; line-height: 1.4; margin: 0 0 4px; }
   .fhint b { color: rgba(255,255,255,0.85); font-weight: 600; } .fhint .fp { color: ${ACCENT.cpu}; font-weight: 700; margin-left: 4px; }
   .fv { padding: 8px 4px 10px; }
-  .fv .ft .d.late { color: #FF9F0A; font-weight: 700; }
+  .fv .ft .d.late { color: #FF5F5F; font-weight: 700; }
   .fv .fm { margin: 1px 0 0 16px; font-size: 10.5px; color: ${GLASS.label}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .fv .fb { margin: 6px 0 0 16px; display: flex; flex-direction: column; gap: 3px; }
   .fv .fb .ln { margin-left: 0; color: rgba(255,255,255,0.86); }
   .fv .fb .ln b { font-size: 8.5px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: ${GLASS.label}; margin-right: 6px; }
-  .fv .fb .warn { color: #FFB340; font-size: 11px; }
+  .fv .fb .warn { color: ${ACCENT.heads}; font-size: 11px; padding-left: 8px; border-left: 2px solid rgba(245,212,107,0.55); }
   .fv .fb .sgb { margin: 3px 0 0; padding: 7px 9px; border-left: 2px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.04); border-radius: 0 6px 6px 0; }
   .fv .bts { margin: 7px 0 0 16px; }
   .fv .fl2 { margin: 6px 0 0 16px; }
-  .fv .fe { margin: 6px 0 0 16px; font-size: 11px; color: #FF9F0A; display: flex; align-items: center; gap: 8px; }
+  .fv .fe { margin: 6px 0 0 16px; font-size: 11px; color: #FF5F5F; display: flex; align-items: center; gap: 8px; }
   .fv.sent .ft .l { color: ${GLASS.sub}; } .fv.sent .ft .nn { color: ${ACCENT.cpu}; }
   .fsk { font-size: 10.5px; color: ${GLASS.label}; padding: 6px 4px 0; cursor: pointer; } .fsk:hover { color: #fff; }
   .team { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px; margin: 0 0 6px; font-size: 10.5px; }
   .team .th { font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: ${GLASS.label}; margin-right: 2px; }
   .team .tm { padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,0.07); cursor: pointer; }
   .team .tm:hover, .team .tm.on { background: rgba(255,255,255,0.18); }
-  .team .tm b { font-weight: 800; } .team .tm em { font-style: normal; color: #FF9F0A; }
-  .team .ov { color: #FFB340; }
+  .team .tm b { font-weight: 800; } .team .tm em { font-style: normal; color: #FF5F5F; }
+  .team .ov { color: #FF9CA0; }
   /* the top sections: plain headings with air between them, no boxes. The grip and arrows only show
      on hover; a section being dragged just dims a little. */
   .secs { display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
@@ -2465,13 +3232,14 @@ const crmCss = css`
   .blk2 .bb .dn, .blk2 .bb .team, .blk2 .bb .cal, .blk2 .bb .five { margin-bottom: 0; }
   .lvmark { height: 0; }
   .lv { padding-top: 10px; border-top: 1px solid ${GLASS.hair}; }
+  .lv.lvtop { padding: 0 0 8px; margin: 0 0 8px; border-top: 0; border-bottom: 1px solid ${GLASS.hair}; }
   .lvfloat { position: absolute; top: 0; left: 0; right: 0; z-index: 5; margin: 0 !important; padding: 0 0 6px; border-top: 0;
              opacity: 0; pointer-events: none; transition: opacity .12s; }
   .crmwrap[data-stuck="1"] .lvfloat { opacity: 1; pointer-events: auto; }
   .crmwrap[data-stuck="1"] .crmscroll {
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent var(--lvh, 30px), #000 calc(var(--lvh, 30px) + 14px));
             mask-image: linear-gradient(to bottom, transparent 0, transparent var(--lvh, 30px), #000 calc(var(--lvh, 30px) + 14px)); }
-  .crmnote b { font-weight: 700; color: #FFB340; margin-right: 4px; }
+  .crmnote b { font-weight: 700; color: #FF9CA0; margin-right: 4px; }
   .crmnote { font-size: 10.5px; color: ${GLASS.label}; margin: 0 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .lv { display: flex; gap: 4px; flex-wrap: wrap; margin: 2px 0 6px; flex: 0 0 auto; }
   .lv span { padding: 3px 9px; border-radius: 8px; cursor: pointer; font-size: 9.5px; font-weight: 800; letter-spacing: .6px;
@@ -2487,14 +3255,15 @@ const crmCss = css`
   .r .t { font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .r .k { flex: 0 0 auto; font-size: 8.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: ${GLASS.label};
           border: 1px solid rgba(255,255,255,0.18); border-radius: 5px; padding: 0 4px; }
-  .r .k.reply, .r .k.result { color: #FF9F0A; border-color: rgba(255,159,10,0.5); }
+  .r .k.result { color: #FF5F5F; border-color: rgba(255,95,95,0.5); }
+  .r .k.reply, .r .k.email { color: ${ACCENT.reply}; border-color: rgba(100,210,255,0.55); background: rgba(100,210,255,0.1); }
   .r .k.hot { color: #FF6961; border-color: rgba(255,105,97,0.5); }
   .r .k.cooling { color: #64D2FF; border-color: rgba(100,210,255,0.5); }
   .r .k.new { color: ${ACCENT.notify}; border-color: rgba(201,168,255,0.5); }
   .r .own { flex: 0 0 auto; font-size: 9.5px; color: ${GLASS.sub}; padding: 0 5px; border-radius: 5px; background: rgba(255,255,255,0.07); }
-  .r .own.two { color: #FFB340; }
+  .r .own.two { color: #FF9CA0; }
   .r .when { margin-left: auto; flex: 0 0 auto; font-size: 10px; color: ${GLASS.label}; white-space: nowrap; }
-  .r .when.late { color: #FF9F0A; font-weight: 700; }
+  .r .when.late { color: #FF5F5F; font-weight: 700; }
   .r .meta { font-size: 11px; color: ${GLASS.sub}; margin: 2px 0 0 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* news on a row: a wide violet sheen slides across the letters, left to right, and wraps back to
      the start without a seam (the gradient tile repeats). The
@@ -2512,8 +3281,10 @@ const crmCss = css`
   .news .nx { color: ${GLASS.sub}; margin-top: 2px; }
   .news .acts { justify-content: flex-end; margin-top: 3px; }
   .card { margin: 6px 0 0 14px; font-size: 11.5px; line-height: 1.45; }
-  /* the card loader, in the item's company color (lc1 MSBAI blue, lc2 Tam Fortis orange, lc3 Nexcavate
-     green, lc0 silver). Violet stays reserved for news. */
+  /* an open card ends with breathing room before the next row */
+  .r.on { padding-bottom: 14px; margin-bottom: 8px; }
+  /* the card loader, in the item's company color (lc1 MSBAI blue, lc2 Tam Fortis green, lc3 Nexcavate
+     amber, lc0 silver). Violet stays reserved for news. */
   @keyframes crmBar { from { left: -45%; } to { left: 100%; } }
   @keyframes crmDot { 0%, 100% { opacity: .15; } 40% { opacity: 1; } }
   @keyframes crmSrcDot { 0%, 30%, 100% { transform: scale(.6); opacity: .4; } 8% { transform: scale(1.25); opacity: 1; } 22% { transform: scale(1); opacity: 1; } }
@@ -2546,8 +3317,9 @@ ${["#CBD3DE", ...Object.values(CRM_CO_DOT)].map((hex, n) => {
   /* Do now: a small tag says what is new on a line (instead of turning the line violet) */
   .ai .why { flex: 0 0 auto; font-size: 9px; font-weight: 700; padding: 0 6px; border-radius: 5px; line-height: 15px;
              color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.14); }
-  .ai .why.w-late { color: #FF9F0A; border-color: rgba(255,159,10,0.45); background: rgba(255,159,10,0.1); }
-  .ai .why.w-reply, .ai .why.w-mail { color: #64D2FF; border-color: rgba(100,210,255,0.4); background: rgba(100,210,255,0.08); }
+  .ai .why.w-late { color: #FF5F5F; border-color: rgba(255,95,95,0.45); background: rgba(255,95,95,0.1); }
+  .ai .why.w-mail { color: #64D2FF; border-color: rgba(100,210,255,0.4); background: rgba(100,210,255,0.08); }
+  .ai .why.w-reply { color: ${ACCENT.reply}; border-color: rgba(100,210,255,0.5); background: rgba(100,210,255,0.1); }
   .ai .why.w-tpoc { color: ${CRM_TPOC}; border-color: rgba(255,122,182,0.45); background: rgba(255,122,182,0.08); }
   /* the action panel at the bottom of a card: Update the CRM, then Reach out */
   .ap { margin-top: 12px; padding: 9px 10px 8px; border-radius: 10px; background: rgba(255,255,255,0.045); border: 1px solid ${GLASS.hair}; }
@@ -2568,7 +3340,7 @@ ${["#CBD3DE", ...Object.values(CRM_CO_DOT)].map((hex, n) => {
   .bt.go:hover { background: rgba(52,199,89,0.28); }
   .bt.st { cursor: default; color: ${GLASS.sub}; }
   .bt.sm { padding: 2px 9px; font-size: 10px; }
-  .bts .bad { font-size: 10px; color: #FF9F0A; }
+  .bts .bad { font-size: 10px; color: #FF5F5F; }
   .hns { margin-top: 5px; font-size: 10.5px; line-height: 1.35; color: ${GLASS.label}; min-height: 14px; }
   .hn { display: none; } .hn.h0 { display: block; }
   .apg:has(.bt:hover) .hn.h0 { display: none; }
@@ -2599,7 +3371,7 @@ ${["done", "cancel", "fu", "later", "note", "page", "draft", "change", "dready",
   .letters span { font-size: 9.5px; font-weight: 800; color: ${GLASS.label}; padding: 1px 4px; border-radius: 4px; cursor: pointer; }
   .letters span:hover, .letters span.on { color: #fff; background: rgba(255,255,255,0.14); }
   .card .ln { margin-top: 3px; } .card b { color: #fff; font-weight: 700; margin-right: 4px; }
-  .card .warn { margin-top: 4px; color: #FFB340; }
+  .card .warn { margin-top: 4px; color: ${ACCENT.heads}; padding-left: 8px; border-left: 2px solid rgba(245,212,107,0.55); }
   .ppl { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
   .ppl .p { font-size: 10.5px; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,0.08); cursor: pointer; }
   .ppl .p i { font-style: normal; color: ${GLASS.label}; font-size: 9.5px; }
@@ -2608,7 +3380,7 @@ ${["done", "cancel", "fu", "later", "note", "page", "draft", "change", "dready",
   .tpa { margin-top: 6px; font-size: 11px; }
   .tpa .go { cursor: pointer; font-weight: 800; font-size: 10px; letter-spacing: .5px; text-transform: uppercase; color: ${CRM_TPOC};
              border: 1px solid ${CRM_TPOC}; border-radius: 6px; padding: 1px 7px; }
-  .tpa .ok { color: ${ACCENT.cpu}; } .tpa .bad { color: #FF9F0A; }
+  .tpa .ok { color: ${ACCENT.cpu}; } .tpa .bad { color: #FF5F5F; }
   .dact { display: inline-flex; gap: 14px; align-items: baseline; }
   .dnote { width: 230px; box-sizing: border-box; padding: 3px 7px; border-radius: 7px; font: inherit; font-size: 11px; color: #fff;
            text-transform: none; letter-spacing: 0; font-weight: 500;
@@ -2621,7 +3393,7 @@ ${["done", "cancel", "fu", "later", "note", "page", "draft", "change", "dready",
   .chips span { font-size: 9.5px; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,0.07); cursor: pointer; color: ${GLASS.sub}; }
   .chips span.on, .chips span:hover { background: rgba(255,255,255,0.2); color: #fff; }
   .ob { margin-top: 5px; font-size: 10.5px; color: ${GLASS.sub}; }
-  .ob .o.ok { color: ${ACCENT.cpu}; } .ob .o.failed { color: #FF9F0A; }
+  .ob .o.ok { color: ${ACCENT.cpu}; } .ob .o.failed { color: #FF5F5F; }
   .cc { margin-top: 6px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.08); }
   .lks { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; }
   .lk { color: ${ACCENT.link}; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
@@ -2683,13 +3455,13 @@ const FLOW_ROW = 64;
 // and open questions become desk tasks in one click, and those sync to ClickUp like any other.
 const WIKI_STATUS = {
   current: ["Current", "#5ED3A1"], check: ["Needs a check", "#F5C542"], conflict: ["Sources disagree", "#FF6B5A"],
-  gap: ["Not written yet", "#9AA4B2"], stale: ["Out of date", "#FF9F5A"], open: ["Open", "#64D2FF"],
+  gap: ["Not written yet", "#9AA4B2"], stale: ["Out of date", "#FF9CA0"], open: ["Open", "#64D2FF"],
 };
 const WIKI_CHECK = { demo: ["Works now", "#5ED3A1"], spec: ["Designed", "#64D2FF"], partial: ["Partly", "#F5C542"],
-                     later: ["Later", "#9AA4B2"], open: ["Open", "#FF9F5A"] };
+                     later: ["Later", "#9AA4B2"], open: ["Open", "#FF9CA0"] };
 const WIKI_KINDS = [["all", "All"], ["system", "Systems"], ["part", "Parts"], ["process", "How we work"],
                     ["past", "Past work"], ["decision", "Decisions"], ["glossary", "Glossary"]];
-const WIKI_LINK = { msg: "rgba(255,255,255,0.55)", train: "#B48CFF", check: "#64D2FF", heat: "#FF9F5A",
+const WIKI_LINK = { msg: "rgba(255,255,255,0.55)", train: "#B48CFF", check: "#64D2FF", heat: "#FF5F5F",
                     cold: "#64D2FF", power: "#FFD60A" };
 const WIKI_LINK_NAME = { msg: "messages", train: "trains agents", check: "rule checks", heat: "heat",
                          cold: "return loop", power: "electric power" };
@@ -3233,10 +4005,12 @@ const wikiCss = css`
   .hero .p { max-width: 66ch; margin-top: 4px; }
   .livepill { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; font-size: 10.5px; font-weight: 700; color: ${GLASS.sub};
               padding: 5px 10px; border-radius: 20px; background: rgba(255,255,255,0.06); white-space: nowrap; }
-  .livepill i { width: 7px; height: 7px; border-radius: 50%; background: #9AA4B2; }
-  .livepill.on i { background: #5ED3A1; box-shadow: 0 0 0 0 rgba(94,211,161,.6); animation: wkLive 2s ease-out infinite; }
-  @keyframes wkLive { 0% { box-shadow: 0 0 0 0 rgba(94,211,161,.55); } 100% { box-shadow: 0 0 0 7px rgba(94,211,161,0); } }
-  .note { color: #FF9F5A; font-size: 11.5px; }
+  .livepill i { position: relative; width: 7px; height: 7px; border-radius: 50%; background: #9AA4B2; }
+  .livepill.on i { background: #5ED3A1; }
+  .livepill.on i:after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #5ED3A1;
+    animation: wkLive 2s cubic-bezier(.2,.6,.3,1) infinite; will-change: transform, opacity; transform: translateZ(0); }
+  @keyframes wkLive { 0% { transform: scale(1); opacity: .6; } 100% { transform: scale(3); opacity: 0; } }
+  .note { color: #FF9CA0; font-size: 11.5px; }
   .home > .h { margin: 2px 0 -8px; }
   .co .thumb { height: 74px; margin: 2px -4px 8px; opacity: .9; pointer-events: none; }
   .co .stats { display: flex; gap: 12px; font-size: 10.5px; color: ${GLASS.sub}; margin-bottom: 8px; flex-wrap: wrap; }
@@ -3309,19 +4083,19 @@ const wikiCss = css`
   .nd.frame:hover rect, .nd.frame.sel rect { stroke: var(--c); fill: none; }
   .nd .fl { fill: rgba(255,255,255,0.5); pointer-events: auto; cursor: pointer; }
   .ring .band { fill: none; stroke: rgba(255,255,255,0.07); transition: stroke .25s; }
-  .ring:hover .band, .ring.sel .band { stroke: rgba(255,159,90,0.18); }
+  .ring:hover .band, .ring.sel .band { stroke: rgba(94,211,161,0.18); }
   .ring .spin { animation: wkSpin 60s linear infinite; transform-box: fill-box; transform-origin: center; }
   .ring .drum { fill: rgba(203,211,222,0.35); stroke: rgba(255,255,255,0.4); stroke-width: .2; }
-  .ring.sel .drum { fill: rgba(255,159,90,0.6); }
-  .core .body { fill: rgba(255,120,60,0.12); stroke: rgba(255,159,90,0.55); stroke-width: .35; animation: wkGlow 3.2s ease-in-out infinite; transition: fill .25s; }
-  .core.sel .body { fill: rgba(255,120,60,0.24); stroke-width: .6; }
-  .core .fuel circle { fill: #FF9F5A; }
+  .ring.sel .drum { fill: rgba(94,211,161,0.6); }
+  .core .body { fill: rgba(60,200,140,0.12); stroke: rgba(94,211,161,0.55); stroke-width: .35; animation: wkGlow 3.2s ease-in-out infinite; transition: fill .25s; }
+  .core.sel .body { fill: rgba(60,200,140,0.24); stroke-width: .6; }
+  .core .fuel circle { fill: #5ED3A1; }
   .core .mod circle { fill: #9FD3FF; opacity: .8; }
-  .core .fuel.sel circle { fill: #FFD0A8; filter: drop-shadow(0 0 1px #FF9F5A); }
+  .core .fuel.sel circle { fill: #BDF2DA; filter: drop-shadow(0 0 1px #5ED3A1); }
   .core .mod.sel circle { fill: #fff; filter: drop-shadow(0 0 1px #9FD3FF); }
   .core g { cursor: pointer; }
   .pipes .hit { fill: transparent !important; stroke: none !important; }
-  .pipes .pipe { fill: none; stroke: #FF9F5A; stroke-width: .7; stroke-dasharray: 1.6 1.4; animation: wkFlow 1.1s linear infinite; opacity: .8; }
+  .pipes .pipe { fill: none; stroke: #5ED3A1; stroke-width: .7; stroke-dasharray: 1.6 1.4; animation: wkFlow 1.1s linear infinite; opacity: .8; }
   .pipes.sel .pipe { stroke-width: 1.1; opacity: 1; }
   .pipes text { fill: rgba(255,255,255,0.6) !important; }
   .ln { stroke-width: .45; stroke-dasharray: 1.2 1.2; animation: wkFlowLn 1.1s linear infinite; pointer-events: none; }
@@ -4095,7 +4869,7 @@ function setView(v, dispatch) {
     setTimeout(() => { if (lastThread) focusThread(lastThread, dispatch); }, 200);
     return;
   }
-  if (OWN_VIEWS.some(o => o.key === v)) { setPane(""); return; }   // nothing to park: one call
+  if (v === "settings" || OWN_VIEWS.some(o => o.key === v)) { setPane(""); return; }   // nothing to park: one call
   const app = appByKey(v);
   if (app) setTimeout(() => setPane(app.name), 120);    // the slot only exists after the re-render
 }
@@ -4149,11 +4923,10 @@ const panel = css`
 // child, so a gap set there separates nothing. The column lives here, on the element we return.
 const shell = css`
   display: flex; flex-direction: column; gap: ${CFG.gap}px;
-  & *::-webkit-scrollbar { width: 6px; height: 6px; }
-  & *::-webkit-scrollbar-track { background: transparent; }
-  & *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
-  & *:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); }
-  & *::-webkit-scrollbar-corner { background: transparent; }
+  /* No scrollbars anywhere in the widget. Everything still scrolls with the wheel or trackpad. */
+  &, & * { scrollbar-width: none; }
+  & *::-webkit-scrollbar, & *:hover::-webkit-scrollbar, &::-webkit-scrollbar
+    { width: 0 !important; height: 0 !important; display: none !important; background: transparent; }
 `;
 const wideGrip = css`
   position: absolute; z-index: 40; top: 24px; bottom: 0; right: -${CFG.gap}px; width: ${CFG.gap}px; cursor: ew-resize;
@@ -4198,6 +4971,12 @@ const head = css`
 // disclosure that opens to them: context in plain language, then the Slack threads, documents
 // and emails it takes to do the thing, each a link. The row is a div and not a <label> on
 // purpose: a label would tick the box for any click on the text, and the text is the disclosure.
+// The task list scrolls with the wheel or trackpad but draws no scrollbar, so the right edge is
+// free for the highlight tray's hot zone.
+const noBar = css`
+  scrollbar-width: none;
+  &::-webkit-scrollbar, &:hover::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none; background: transparent; }
+`;
 const taskRow = css`
   display: flex; gap: 12px; align-items: flex-start; padding: 6px 0;
   border-top: 1px solid ${GLASS.hair};
@@ -4212,10 +4991,42 @@ const taskRow = css`
   input:checked { border-color: ${ACCENT.cal}; background: ${ACCENT.cal}; }
   .body { flex: 1 1 auto; min-width: 0; }
   .t { font-weight: 600; line-height: 1.25; display: flex; gap: 5px; align-items: baseline; }
+  /* the header of a task (title and meta line) is a handle, not text: pressing and dragging it moves
+     the task and never paints a selection. Open notes and news stay selectable. */
+  .t, .m { -webkit-user-select: none; user-select: none; }
+  .body { -webkit-tap-highlight-color: transparent; }
   .chev { flex: 0 0 auto; width: 9px; font-size: 10px; color: ${GLASS.sub}; transition: color .15s; }
   .body:hover .chev { color: #fff; }
   .m { color: ${GLASS.sub}; font-size: 11px; margin-top: 2px; }
   .tag { color: ${ACCENT.cal}; }
+  position: relative;
+  /* the row being dragged: lifted a little and see-through, so you can see where it will land */
+  &.dragging { opacity: .6; background: rgba(255,255,255,0.06); border-radius: 6px; }
+  /* highlight: a soft wash of the color behind the row and a bar at its edge */
+  &.marked { background: linear-gradient(90deg, rgba(var(--mkrgb),0.16), rgba(var(--mkrgb),0.04) 70%, transparent);
+             box-shadow: inset 2px 0 0 var(--mk); border-radius: 6px; margin: 0 -6px 0 -10px; padding-left: 10px; padding-right: 6px; }
+  /* the swatch pop-up a double-click opens */
+  /* the hot edge: the last few pixels on the right of a row. A faint line shows on row hover, and
+     it fills while you rest there, so you can see the tray is coming. */
+  .mkzone { position: absolute; z-index: 5; right: -14px; top: 0; bottom: 0; width: 14px; cursor: pointer; }
+  .mkzone:after { content: ""; position: absolute; right: 5px; top: 25%; bottom: 25%; width: 2px; border-radius: 2px;
+                  background: rgba(255,255,255,0.14); opacity: 0; transition: opacity .15s; }
+  &:hover .mkzone:after { opacity: 1; }
+  .mkzone:hover:after { background: linear-gradient(to top, #FF9ECF, #FFE566, #8FD8FF); opacity: 1;
+                        animation: mkFill ${MARK_HOVER_MS}ms linear both; }
+  @keyframes mkFill { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
+  .mkpop { position: absolute; z-index: 60; right: -14px; top: 50%; display: flex; align-items: center; gap: 6px;
+           padding: 5px 7px; border-radius: 9px 0 0 9px; background: rgba(28,30,36,0.94); border: 1px solid rgba(255,255,255,0.14);
+           border-right: 0; box-shadow: -6px 6px 18px rgba(0,0,0,0.4); animation: mkSlide .2s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes mkSlide { from { opacity: 0; transform: translate(14px, -50%); } to { opacity: 1; transform: translate(0, -50%); } }
+
+  .mkpop .sw { width: 14px; height: 14px; border-radius: 4px; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
+               transition: transform .12s; }
+  .mkpop .sw:hover { transform: scale(1.18); }
+  .mkpop .sw.on { box-shadow: 0 0 0 2px rgba(28,30,36,1), 0 0 0 3.5px #fff; }
+  .mkpop .clr, .mkpop .pn { font-size: 10px; font-weight: 700; color: ${GLASS.label}; cursor: pointer; padding: 0 2px; }
+  .mkpop .pn { border-left: 1px solid rgba(255,255,255,0.14); padding-left: 7px; margin-left: 1px; }
+  .mkpop .clr:hover, .mkpop .pn:hover { color: #fff; }
   &.pin .t { color: ${ACCENT.pin}; }
   &.pin .t .chev { color: ${ACCENT.pin}; opacity: .7; }
   /* notify mode: a task with news from watch.sh. The title shimmers slowly and glows until "got it". */
@@ -4419,13 +5230,179 @@ const dayLine = css`
 // Sized to be read, not to be tucked into a corner: it spans the whole cluster and is free to
 // cover Tasks, System and Meetings. Vertically it grows to fit and stops at the row's height,
 // so long notes scroll inside the card rather than pushing it past the panels it sits on.
+// The event card: the same glass as the rest of the widget, tinted by the event's calendar color,
+// rising in with its sections following a beat behind.
+const evCard = css`
+  position: absolute; z-index: 30; left: 0; right: 0; top: 0; max-height: 100%; box-sizing: border-box; overflow: auto;
+  outline: none; cursor: default; border-radius: ${GLASS.radius};
+  background: linear-gradient(180deg, rgba(var(--ev), 0.16), rgba(var(--ev), 0) 170px), rgba(24,26,31,0.95);
+  border: 1px solid rgba(255,255,255,0.16); box-shadow: 0 28px 70px rgba(0,0,0,0.6), inset 3px 0 0 rgba(var(--ev), 0.9);
+  padding: 20px 24px 16px 26px; font-size: 13.5px; line-height: 1.5; color: #fff;
+  animation: evIn .32s cubic-bezier(.2,.85,.25,1) both;
+  @keyframes evIn { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+  @keyframes evUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  & > .hd, & > .acts, & > .sec, & > .ft, & > .hint { animation: evUp .34s cubic-bezier(.2,.85,.25,1) both; }
+  & > .acts { animation-delay: .05s; } & > .sec { animation-delay: .1s; } & > .sec + .sec { animation-delay: .14s; }
+  & > .ft { animation-delay: .18s; }
+  .x { position: absolute; z-index: 10; top: 14px; right: 16px; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center;
+       justify-content: center; cursor: pointer; color: ${GLASS.sub}; font-size: 17px; background: rgba(255,255,255,0.06); transition: background .15s, color .15s, transform .15s; }
+  .x:hover { color: #fff; background: rgba(255,255,255,0.14); transform: rotate(90deg); }
+  .cal { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 800; letter-spacing: .9px; text-transform: uppercase; color: ${GLASS.sub}; }
+  .cal > i { width: 8px; height: 8px; border-radius: 50%; background: rgb(var(--ev)); box-shadow: 0 0 8px rgba(var(--ev), 0.8); }
+  .cal .bdg { margin-left: 4px; padding: 1px 7px; border-radius: 999px; font-size: 9px; letter-spacing: .5px; color: ${ACCENT.reply};
+              border: 1px solid rgba(100,210,255,0.45); background: rgba(100,210,255,0.08); }
+  .t { font-weight: 700; font-size: 21px; line-height: 1.22; letter-spacing: -0.3px; margin-top: 7px; padding-right: 34px; }
+  .when { margin-top: 6px; color: rgba(255,255,255,0.78); font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  .live { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 4px 11px 4px 9px; border-radius: 999px;
+          font-size: 11.5px; font-weight: 700; background: rgba(255,255,255,0.07); color: ${GLASS.sub}; }
+  .live .dot { position: relative; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .live.now { color: #5EF0A0; background: rgba(94,240,160,0.1); }
+  .live.soon { color: ${ACCENT.reply}; background: rgba(100,210,255,0.1); }
+  /* The live pulse is a ring that scales and fades: transform and opacity only, so the GPU
+     draws it at full frame rate. (Animating box-shadow repainted every frame and stuttered.) */
+  .live.now .dot:after, .live.soon .dot:after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: currentColor;
+    animation: evRipple 1.8s cubic-bezier(.2,.6,.3,1) infinite; will-change: transform, opacity; transform: translateZ(0); }
+  @keyframes evRipple { 0% { transform: scale(1); opacity: .65; } 100% { transform: scale(3.4); opacity: 0; } }
+  .live .pb { width: 70px; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.15); overflow: hidden; }
+  .live .pb i { display: block; height: 100%; background: currentColor; border-radius: 2px; transition: width .6s; }
+  .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+  .join { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px 10px 16px; border-radius: 12px; cursor: pointer;
+          font-weight: 800; font-size: 13.5px; color: #071018; background: linear-gradient(180deg, #8FD0FF, ${ACCENT.link});
+          box-shadow: 0 6px 18px rgba(76,180,255,0.3); transition: transform .15s, box-shadow .15s, filter .15s; }
+  .join svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .join:hover { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 10px 24px rgba(76,180,255,0.4); }
+  .join:active { transform: translateY(0) scale(.98); }
+  .join { position: relative; }
+  /* the "it's time" glow: a halo layer that fades in and out, again transform and opacity only */
+  .join.hot:after { content: ""; position: absolute; inset: -4px; border-radius: 15px; pointer-events: none;
+    box-shadow: 0 0 0 2px rgba(76,180,255,0.45), 0 0 24px rgba(76,180,255,0.65);
+    opacity: 0; animation: evGlow 2.2s ease-in-out infinite; will-change: opacity, transform; transform: translateZ(0); }
+  @keyframes evGlow { 0%, 100% { opacity: 0; transform: scale(.97); } 50% { opacity: 1; transform: scale(1); } }
+  .join.alt { color: #fff; background: rgba(255,255,255,0.12); box-shadow: none; border: 1px solid rgba(255,255,255,0.2); }
+  .chip { padding: 7px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.85);
+          background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); transition: background .15s, color .15s; white-space: nowrap; }
+  .chip:hover { background: rgba(255,255,255,0.13); color: #fff; }
+  .chip.ok { color: ${ACCENT.cpu}; border-color: rgba(52,199,89,0.4); }
+  .sec { margin-top: 16px; padding-top: 14px; border-top: 1px solid ${GLASS.hair}; }
+  .lh { font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: ${GLASS.label}; margin-bottom: 9px; }
+  .rsvp { display: flex; align-items: center; gap: 12px; }
+  .rsvp .lb { font-size: 12.5px; font-weight: 700; color: ${GLASS.sub}; }
+  .seg { display: inline-flex; padding: 3px; border-radius: 11px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+  .seg span { padding: 5px 15px; border-radius: 8px; font-size: 12.5px; font-weight: 700; color: rgba(255,255,255,0.75); cursor: pointer; transition: background .18s, color .18s; }
+  .seg span:hover { color: #fff; }
+  .seg span.on { background: rgba(255,255,255,0.9); color: #0b1016; }
+  .seg span.on.no { background: rgba(255,95,95,0.9); color: #fff; }
+  .seg span.dis { opacity: .45; cursor: default; }
+  .rsvp .need { font-size: 11.5px; font-weight: 700; color: ${ACCENT.reply}; }
+  .row { display: flex; gap: 9px; align-items: flex-start; color: rgba(255,255,255,0.85); }
+  .row svg { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 2px; fill: none; stroke: ${GLASS.sub}; stroke-width: 1.4; }
+  .row + .lh, .loc + .lh { margin-top: 14px; }
+  .ppl { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pp { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 999px; cursor: pointer;
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); animation: evUp .3s cubic-bezier(.2,.85,.25,1) both;
+        transition: background .15s; }
+  .pp:hover { background: rgba(255,255,255,0.13); }
+  .pp i { position: relative; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+          font-style: normal; font-size: 9px; font-weight: 800; color: #fff; }
+  .pp i:after { content: ""; position: absolute; right: -1px; bottom: -1px; width: 7px; height: 7px; border-radius: 50%;
+                border: 1.5px solid rgb(24,26,31); background: rgba(255,255,255,0.35); }
+  .pp.accepted i:after { background: #34C759; } .pp.declined i:after { background: #FF5F5F; } .pp.tentative i:after { background: #F5C542; }
+  .pp.more i { background: rgba(255,255,255,0.12); } .pp.more i:after { display: none; }
+  .pp .pn { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.9); }
+  .pp.me .pn { color: #fff; } .pp.declined .pn { color: ${GLASS.label}; text-decoration: line-through; text-decoration-color: rgba(255,255,255,0.3); }
+  .n { color: rgba(255,255,255,0.82); line-height: 1.55; word-break: break-word; }
+  .n .gap { height: 8px; } .n .bul { padding-left: 15px; text-indent: -15px; }
+  .n .fade { -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent); mask-image: linear-gradient(180deg, #000 60%, transparent); }
+  .tg { display: inline-block; margin-top: 6px; font-size: 11.5px; font-weight: 700; color: ${ACCENT.link}; cursor: pointer; }
+  .tg:hover { color: #fff; }
+  .lk { color: ${ACCENT.link}; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+  .lk:hover { color: #fff; }
+  .lks { display: flex; flex-direction: column; gap: 4px; }
+  .lk2 { display: flex; gap: 10px; align-items: baseline; padding: 6px 10px; margin: 0 -10px; border-radius: 9px; cursor: pointer; transition: background .15s; }
+  .lk2:hover { background: rgba(255,255,255,0.08); }
+  .lk2 b { flex: 0 0 auto; font-size: 12.5px; font-weight: 600; }
+  .lk2 span { font-size: 11.5px; color: ${ACCENT.link}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prep { font-size: 12.5px; }
+  .hint { margin-top: 10px; font-size: 11.5px; color: ${GLASS.label}; line-height: 1.45; }
+  .hint code { font-family: Menlo, monospace; font-size: 11px; color: ${GLASS.sub}; }
+  .flash { margin-top: 12px; font-size: 12.5px; color: ${ACCENT.cpu}; } .flash.bad { color: #FF5F5F; }
+  .ft { display: flex; gap: 16px; align-items: center; margin-top: 18px; padding-top: 12px; border-top: 1px solid ${GLASS.hair}; font-size: 11.5px; }
+  .ft span { color: ${GLASS.sub}; cursor: pointer; } .ft span:hover { color: #fff; }
+  .ft .k { margin-left: auto; color: ${GLASS.label}; cursor: default; font-size: 10.5px; } .ft .k:hover { color: ${GLASS.label}; }
+`;
+// The instant call tile: an animated camera badge, the two platforms as cards, teammates as
+// avatar chips, and one big start button.
+const meetCss = css`
+  .mhd { display: flex; gap: 16px; align-items: center; }
+  .mic { position: relative; flex: 0 0 auto; width: 54px; height: 54px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+         background: linear-gradient(135deg, rgba(var(--ev), 0.95), rgba(var(--ev), 0.55)); box-shadow: 0 10px 26px rgba(var(--ev), 0.35);
+         transition: background .3s; }
+  .mic svg { position: relative; z-index: 2; width: 26px; height: 26px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .mic .ring { position: absolute; inset: 0; border-radius: 16px; border: 2px solid rgba(var(--ev), 0.6); animation: micRing 2.4s cubic-bezier(.2,.6,.3,1) infinite;
+               will-change: transform, opacity; transform: translateZ(0); }
+  .mic .ring.r2 { animation-delay: 1.2s; }
+  .mic.busy .ring { animation-duration: 1.1s; } .mic.busy .ring.r2 { animation-delay: .55s; }
+  .mic.done .ring { animation: none; opacity: 0; }
+  .mic .ck { stroke-dasharray: 24; stroke-dashoffset: 24; animation: micCk .45s .1s ease forwards; stroke-width: 2.4; }
+  @keyframes micRing { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(1.55); opacity: 0; } }
+  @keyframes micCk { to { stroke-dashoffset: 0; } }
+  .mtx { min-width: 0; } .mtx .t { margin-top: 4px; }
+  .plats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pl { position: relative; display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 13px; cursor: pointer;
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: background .18s, border-color .18s, transform .15s; }
+  .pl:hover { background: rgba(255,255,255,0.09); transform: translateY(-1px); }
+  .pl.on { background: rgba(var(--ev), 0.14); border-color: rgba(var(--ev), 0.7); }
+  .pl i { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+          background: rgba(255,255,255,0.08); }
+  .pl.meet i { background: rgba(52,199,140,0.22); } .pl.zoom i { background: rgba(76,140,255,0.25); }
+  .pl i svg { width: 17px; height: 17px; fill: none; stroke: #fff; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .pl b { display: block; font-size: 13px; } .pl small { display: block; font-size: 10.5px; color: ${GLASS.sub}; line-height: 1.3; }
+  .pl .rad { position: absolute; top: 9px; right: 9px; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.3); transition: all .18s; }
+  .pl.on .rad { border-color: rgb(var(--ev)); background: rgb(var(--ev)); box-shadow: inset 0 0 0 2.5px rgb(24,26,31); }
+  .nm { width: 100%; box-sizing: border-box; padding: 10px 13px; border-radius: 11px; font: inherit; font-size: 14px; color: #fff; outline: none;
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); transition: border-color .15s, background .15s; }
+  .nm:focus { border-color: rgba(var(--ev), 0.8); background: rgba(255,255,255,0.09); box-shadow: 0 0 0 3px rgba(var(--ev), 0.18); }
+  .lk3 { font-size: 10px; letter-spacing: .3px; text-transform: none; color: ${ACCENT.link}; cursor: pointer; font-weight: 700; }
+  .lk3:hover { color: #fff; }
+  .tnote { font-size: 11.5px; color: ${GLASS.sub}; margin-bottom: 8px; }
+  .pp.pick i { transition: background .2s, transform .2s; }
+  .pp.pick.on { background: rgba(var(--ev), 0.16); border-color: rgba(var(--ev), 0.6); }
+  .pp.pick.on i { background: rgb(var(--ev)); transform: scale(1.05); font-size: 11px; }
+  .pp.pick i:after { display: none; }
+  .none { font-size: 12px; color: ${GLASS.label}; }
+  .okmsg { color: rgba(255,255,255,0.85); font-size: 13px; }
+  .ft2 { display: flex; align-items: center; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid ${GLASS.hair}; }
+  .ft2 .join { margin: 0; background: linear-gradient(180deg, rgba(var(--ev), 1), rgba(var(--ev), 0.8)); color: #fff;
+               box-shadow: 0 8px 22px rgba(var(--ev), 0.35); padding: 11px 22px 11px 18px; }
+  .ft2 .join.dis { opacity: .85; cursor: default; }
+  .ft2 .k { margin-left: auto; font-size: 10.5px; color: ${GLASS.label}; }
+  .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+`;
+// The heads up ten minutes before a meeting: a countdown ring, join, and your prep.
+const headsCss = css`
+  .hhd { display: flex; gap: 16px; align-items: center; }
+  .cd { position: relative; flex: 0 0 auto; width: 62px; height: 62px; }
+  .cd svg { width: 62px; height: 62px; transform: rotate(-90deg); }
+  .cd circle { fill: none; stroke-width: 4; }
+  .cd .bg { stroke: rgba(255,255,255,0.1); }
+  .cd .fg { stroke: rgb(var(--ev)); stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+  .cd .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1; }
+  .cd .num b { display: block; font-size: 20px; font-weight: 800; } .cd .num small { display: block; font-size: 9px; color: ${GLASS.sub}; margin-top: 2px; }
+  .cd .num .nw { font-size: 14px; }
+  .cd.now { animation: cdBeat 1.4s ease-in-out infinite; will-change: transform; }
+  @keyframes cdBeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  .mtx { min-width: 0; } .mtx .t { margin-top: 4px; }
+`;
 const popover = css`
   position: absolute; z-index: 30; left: 0; right: 0; top: 0;
   max-height: 100%; box-sizing: border-box; overflow: auto;
-  background: rgba(28,30,34,0.98);
-  border: 1px solid rgba(255,255,255,0.2); border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  background: linear-gradient(180deg, rgba(127,178,255,0.1), rgba(127,178,255,0) 160px), rgba(24,26,31,0.95);
+  border: 1px solid rgba(255,255,255,0.16); border-radius: ${GLASS.radius};
+  box-shadow: 0 28px 70px rgba(0,0,0,0.6);
   padding: 20px 24px 22px; font-size: 14px; line-height: 1.5; cursor: default;
+  animation: popIn .3s cubic-bezier(.2,.85,.25,1) both;
+  @keyframes popIn { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
   .t { font-weight: 700; font-size: 20px; line-height: 1.25; padding-right: 30px;
        letter-spacing: -0.2px; }
   .s { color: ${GLASS.sub}; font-variant-numeric: tabular-nums; margin-top: 6px; font-size: 13.5px; }
@@ -4433,10 +5410,11 @@ const popover = css`
              margin-right: 8px; vertical-align: baseline; }
   .s.loc { color: rgba(255,255,255,0.72); }
   /* The one action the card exists for, sized so it is never mistaken for a label. */
-  .join { margin-top: 18px; display: inline-block; padding: 10px 22px; border-radius: 11px;
-          background: ${ACCENT.link}; color: #0b1016; cursor: pointer;
-          font-weight: 800; font-size: 13.5px; letter-spacing: .2px; }
-  .join:hover { filter: brightness(1.12); }
+  .join { margin-top: 18px; display: inline-block; padding: 10px 22px; border-radius: 12px;
+          background: linear-gradient(180deg, #8FD0FF, ${ACCENT.link}); color: #071018; cursor: pointer;
+          font-weight: 800; font-size: 13.5px; letter-spacing: .2px; box-shadow: 0 6px 18px rgba(76,180,255,0.3);
+          transition: transform .15s, box-shadow .15s, filter .15s; }
+  .join:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 10px 24px rgba(76,180,255,0.4); }
   .n { color: rgba(255,255,255,0.8); margin-top: 16px; padding-top: 14px;
        border-top: 1px solid ${GLASS.hair}; font-size: 13.5px; line-height: 1.55;
        word-break: break-word; }
@@ -4457,9 +5435,10 @@ const popover = css`
               text-underline-offset: 2px; white-space: nowrap; overflow: hidden;
               text-overflow: ellipsis; }
   .lrow:hover .lu { color: #fff; }
-  .x { position: absolute; top: 12px; right: 16px; cursor: pointer;
-       color: ${GLASS.label}; font-size: 20px; line-height: 1; }
-  .x:hover { color: #fff; }
+  .x { position: absolute; z-index: 10; top: 14px; right: 16px; width: 26px; height: 26px; border-radius: 50%; display: flex;
+       align-items: center; justify-content: center; cursor: pointer; color: ${GLASS.sub}; font-size: 17px; line-height: 1;
+       background: rgba(255,255,255,0.06); transition: background .15s, color .15s, transform .15s; }
+  .x:hover { color: #fff; background: rgba(255,255,255,0.14); transform: rotate(90deg); }
 
   /* Your reply, as three buttons — the one that matches your current answer is lit. */
   .resp { margin-top: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -4477,7 +5456,7 @@ const popover = css`
   .hint { margin-top: 10px; font-size: 11.5px; color: ${GLASS.label}; line-height: 1.45; }
   .hint code { font-family: Menlo, monospace; font-size: 11px; color: ${GLASS.sub}; }
   .flash { margin-top: 12px; font-size: 12.5px; color: ${ACCENT.cpu}; }
-  .flash.bad { color: #FF9F0A; }
+  .flash.bad { color: #FF5F5F; }
 
   /* The composer: the fields Google Calendar's own quick dialog has, and nothing else. */
   .quick { display: flex; gap: 8px; margin-top: 16px; align-items: stretch; }
@@ -4508,7 +5487,9 @@ const popover = css`
 // is the wrong amount of work.
 const scrim = css`
   position: absolute; z-index: 29; inset: 0; cursor: default;
-  background: rgba(0,0,0,0.25); border-radius: ${GLASS.radius};
+  background: rgba(0,0,0,0.3); border-radius: ${GLASS.radius};
+  animation: scrimIn .25s ease both;
+  @keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
 `;
 const nowLine = css`
   position: absolute; height: 2px; background: ${ACCENT.now}; z-index: 3;
@@ -4583,7 +5564,7 @@ const mailList = css`
   .acts { display: flex; gap: 14px; margin-top: 6px; font-size: 10px; font-weight: 800; letter-spacing: .5px;
           text-transform: uppercase; color: ${GLASS.label}; }
   .acts span { cursor: pointer; } .acts span:hover { color: #fff; }
-  .acts .ok { color: ${ACCENT.cpu}; } .acts .bad { color: #FF9F0A; text-transform: none; letter-spacing: 0; font-weight: 600; }
+  .acts .ok { color: ${ACCENT.cpu}; } .acts .bad { color: #FF5F5F; text-transform: none; letter-spacing: 0; font-weight: 600; }
   .note { display: flex; gap: 8px; margin-top: 6px; }
   .note input { flex: 1; box-sizing: border-box; padding: 6px 9px; border-radius: 8px; font: inherit; font-size: 12px;
                 color: #fff; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14); outline: 0; }
@@ -4673,7 +5654,7 @@ const flowLists = css`
   .nt .on { margin-left: auto; font-size: 10px; font-weight: 700; color: #F5C542; text-shadow: 0 0 6px rgba(245,197,66,0.45); white-space: nowrap; }
   .ns .s { -webkit-line-clamp: 2; }
   .board { margin-bottom: 12px; }
-  .board .bs .old { color: #FF9F0A; }
+  .board .bs .old { color: #FF5F5F; }
   .board .bs, .nh .rv { margin-left: 8px; font-weight: 600; letter-spacing: 0; text-transform: none; color: ${GLASS.label}; }
   .bi { display: flex; align-items: center; gap: 7px; padding: 3px 6px; border-radius: 6px; font-size: 12px; }
   .bi.has { cursor: pointer; } .bi.has:hover { background: rgba(255,255,255,0.06); }
@@ -4686,9 +5667,9 @@ const flowLists = css`
   .nt .mvd { font-size: 9.5px; font-weight: 700; padding: 0 5px; border-radius: 5px; white-space: nowrap; }
   .nt .mvd.up { color: ${ACCENT.notify}; border: 1px solid rgba(201,168,255,0.45); }
   .nt .mvd.dn { color: ${GLASS.label}; border: 1px solid rgba(255,255,255,0.15); }
-  .nt .fl { font-size: 9.5px; font-weight: 700; color: #FF9F0A; padding: 0 5px; border-radius: 5px; border: 1px solid rgba(255,159,10,0.4); white-space: nowrap; }
+  .nt .fl { font-size: 9.5px; font-weight: 700; color: #FF5F5F; padding: 0 5px; border-radius: 5px; border: 1px solid rgba(255,95,95,0.4); white-space: nowrap; }
   .tgt { font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tgt .soon { color: #FF9F0A; font-weight: 700; } .tgt .late { color: ${GLASS.label}; }
+  .tgt .soon { color: #FF5F5F; font-weight: 700; } .tgt .late { color: ${GLASS.label}; }
   .qs { margin: 8px 6px 0; padding: 6px 8px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); }
   .qs .qh { font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: ${GLASS.label}; margin-bottom: 2px; }
   .qs .q { font-size: 11px; color: rgba(255,255,255,0.82); line-height: 1.4; }
@@ -4760,11 +5741,8 @@ const flowCard = css`
   .chips span:hover { background: rgba(255,255,255,0.14); }
   .chips i { width: 7px; height: 7px; border-radius: 50%; }
   .body { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 18px 14px;
-          scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
-  .body::-webkit-scrollbar { width: 6px; }
-  .body::-webkit-scrollbar-track { background: transparent; }
-  .body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 3px; }
-  .body:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.24); }
+          scrollbar-width: none; }
+  .body::-webkit-scrollbar, .body:hover::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
   .h { font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: ${GLASS.label}; margin: 14px 0 4px; }
   .p { margin-top: 10px; }
   .b { padding-left: 12px; position: relative; margin-top: 3px; }
@@ -4857,7 +5835,7 @@ const refreshBtn = css`
   color: ${GLASS.label}; text-transform: uppercase;
   &:hover { color: #fff; }
 `;
-const err = css`color: #FF9F0A; font-size: 11px;`;
+const err = css`color: #FF5F5F; font-size: 11px;`;
 
 // ───────────────────────── render ─────────────────────────
 const hh = d => d.getHours().toString().padStart(2, "0") + ":" + d.getMinutes().toString().padStart(2, "0");
@@ -4986,6 +5964,44 @@ const JOIN_HOST = /(^|\.)(zoom\.us|meet\.google\.com|teams\.microsoft\.(com|us)|
 const isJoinLink = l =>
   JOIN_HOST.test(hostOf(l.url)) &&
   !/invitations\?|\/agenda\/|meetingOptions|dialin|tel\.meet|support\.google|\/launch\/|mynotes=on/i.test(l.url);
+// ── the event card's helpers ──
+const EV_MORE = new Set();                  // events whose full details are expanded
+const EV_PPL = new Set();                   // events whose whole guest list is shown
+const evDur = e => {
+  const m = Math.round((e.end - e.start) / 60000);
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}`;
+};
+const evAgo = m => m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}`;
+// where the meeting is relative to now: soon, now (with how far through), later, or over
+const evLive = e => {
+  if (!e.start || !e.end) return null;
+  const now = Date.now(), s0 = e.start.getTime(), s1 = e.end.getTime();
+  if (now >= s1) return { k: "past", text: `ended ${evAgo(Math.round((now - s1) / 60000))} ago` };
+  if (now >= s0) return { k: "now", text: `happening now · ${evAgo(Math.max(1, Math.round((s1 - now) / 60000)))} left`, pct: Math.round((now - s0) / (s1 - s0) * 100) };
+  const m = Math.round((s0 - now) / 60000);
+  return { k: m <= 10 ? "soon" : "later", text: m <= 0 ? "starting now" : `starts in ${evAgo(m)}` };
+};
+const evInitials = n => String(n || "?").split(/[\s.@_]+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "?";
+const evAvatar = n => {
+  let h = 0; for (const c of String(n || "")) h = (h * 31 + c.charCodeAt(0)) % 360;
+  return `linear-gradient(135deg, hsla(${h},55%,62%,0.55), hsla(${(h + 40) % 360},55%,45%,0.55))`;
+};
+// what "prep with Claude" pastes into a new thread
+const evBrief = (e, inv, prep) => [
+  `Help me prepare for this meeting. Look up anything useful in Gmail, Slack, Fireflies (past meetings with these people) and ClickUp, then give me a short brief: what it is about, what each person cares about, what I owe or am owed, and 3 things I should say or ask.`,
+  ``,
+  `# ${e.title}`,
+  e.start ? `${e.start.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}, ${hh(e.start)} to ${hh(e.end)}` : "All day",
+  e.calendar ? `Calendar: ${e.calendar}` : "",
+  e.organizer ? `Organizer: ${e.organizer}` : "",
+  (e.people || []).length ? `People: ${(e.people || []).map(p => `${p.n}${p.em ? ` <${p.em}>` : ""} (${p.st})`).join(", ")}` : "",
+  e.loc ? `Where: ${e.loc}` : "",
+  inv.join ? `Join: ${inv.join}` : "",
+  inv.body.length ? `\nInvite:\n${inv.body.join("\n")}` : "",
+  inv.links.length ? `\nLinks:\n${inv.links.map(l => `- ${l.label}: ${l.url}`).join("\n")}` : "",
+  prep ? `\nMy prep notes:\n${prep}` : "",
+].filter(x => x !== "").join("\n");
+
 const joinVerb = u => {
   const h = hostOf(u);
   return /zoom\.us$/i.test(h) ? "Join Zoom"
@@ -5181,6 +6197,7 @@ const Gauge = ({ pct, color, label, sub }) => {
 export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view,
                         geo: savedG, split, hiddenChips, sel, noteList, noteEdit, stats = initialState.stats, error,
                         meetings, meetNote, pulling, copied, fold, openTasks, pinned, copiedTask, cuClose = { pending: 0, titles: [] },
+                        marks = {}, taskOrder = [], markPop = "", taskDrag = null, sysMode = "load", settings = SETTINGS_DEF,
                         taskTab = "desk", cuTasks = [], cuNotes = {},
                         gcal, compose, evBusy, flash: flashMsg, zoomBox, zooms = [], team = [],
                         teamNotes = { added: [], gone: [], synced: 0 }, teamSync = false,
@@ -5209,11 +6226,29 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
   const activeNote = (notesTabs.find(n => n.on) || notesTabs[0] || { name: "notes" }).name;
   const shownChips = (allDay || []).filter(e => !(hiddenChips || []).includes(e.title));
   // an app pane swallows the space the calendar row + terminal occupied, so Notes never shifts
-  const paneH = view === "desk" ? sp.dock : (savedPaneH() || (rowH ? rowH + CFG.gap + sp.dock : sp.dock));
-  const hourH = clamp(sp.hourH || CFG.hourHeight, 16, 96);
+  const paneH0 = view === "desk" ? sp.dock : (savedPaneH() || (rowH ? rowH + CFG.gap + sp.dock : sp.dock));
+  // One big area for every tab. On the desk it is the calendar row plus the terminal; on CRM,
+  // Workstreams, Wiki and Claude it is that same total, so Notes never moves when you switch.
+  // Dragging the handle under any of them grows or shrinks the terminal by the same amount.
+  const paneOver = savedPaneOver();
+  const paneH = view !== "desk" && paneOver > 0 ? paneOver + sp.dock : paneH0;
+  const viewGrip = view !== "desk" && (
+    <div className={splitH} title="drag to give this view more room (Notes shrinks when the screen runs out)"
+         style={{ left: 0, right: 0, bottom: -CFG.gap, height: CFG.gap }}
+         onMouseDown={e => beginBottomSplit(e, sp, "dock", dispatch)} />
+  );
+  const hourBase = clamp(sp.hourH || CFG.hourHeight, 16, 96);
+  // Terminal off: the desk row (Calendar and Tasks) takes the whole big area the row and the
+  // terminal used to share, the same height CRM, Workstreams, Wiki and Claude get. The calendar's
+  // hours stretch to fill it, so you see the same window of the day, just roomier.
+  const deskBig = !CFG.terminal && paneOver > 0 ? paneOver + sp.dock : 0;
+  const calFixed = savedCalFixed();
+  const hourH = deskBig && calFixed ? clamp((deskBig - calFixed - hMeet - CFG.gap) / CFG.hours, hourBase, 160) : hourBase;
   const isMain = onMainDisplay(main);
+  // terminal off: any Terminal thread windows still parked over the desk are hidden, once
+  if (!CFG.terminal && !threadsHidden && (tabs || []).some(t => t.visible)) { threadsHidden = true; hideThreads(dispatch); }
   pollStats(dispatch, isMain);
-  if (view === "desk") setTimeout(() => { rememberRowH(); rememberCalH(hourH); rememberPaneH(); }, 250);
+  if (view === "desk") setTimeout(() => { rememberRowH(); rememberCalH(hourH); rememberCalFixed(); rememberPaneH(); }, 250);
   const calMinH = savedCalH(hourH);
   const drawnHours = CFG.hours + CFG.spareHours;
   if (CFG.mainDisplayOnly && !isMain) return <div />;
@@ -5237,11 +6272,23 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
   const midnight = new Date(startHour); midnight.setHours(24, 0, 0, 0);
   const crosses = midnight.getTime() > windowStart && midnight.getTime() < windowEnd;
   const pins = pinned || [];
-  // pinned first, then tasks with news (watch.sh), then the rest in TASKS.md's order
-  const rank = t => { const i = pins.indexOf(t.title); return i >= 0 ? i : (watch[t.title] || []).length ? pins.length : pins.length + 1; };
-  // sort is stable, so unpinned rows keep TASKS.md's order below the pinned ones
-  const active = tasks.filter(t => !t.done).map(t => ({ ...t, alerts: watch[t.title] || [] }))
-                      .sort((a, b) => rank(a) - rank(b)).slice(0, CFG.tasksMax);
+  // pinned first, then tasks you have not placed yet (news before the rest), then your dragged
+  // order. With no dragged order yet, that is the old rule: news first, then TASKS.md's order.
+  const ord = taskOrder || [];
+  const rank = t => {
+    const i = pins.indexOf(t.title); if (i >= 0) return i;
+    const o = ord.indexOf(t.title);
+    if (o < 0) return pins.length + ((watch[t.title] || []).length ? 0 : 0.5);
+    return pins.length + 1 + o;
+  };
+  // sort is stable, so rows of equal rank keep TASKS.md's order
+  let active = tasks.filter(t => !t.done).map(t => ({ ...t, alerts: watch[t.title] || [] }))
+                    .sort((a, b) => rank(a) - rank(b)).slice(0, CFG.tasksMax);
+  if (taskDrag) {                            // mid drag: draw the rows in the order under the pointer
+    const pos = t => { const i = taskDrag.list.indexOf(t.title); return i < 0 ? 999 : i; };
+    active = [...active].sort((a, b) => pos(a) - pos(b));
+  }
+  const activeTitles = active.map(t => t.title);
   const today = now.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
 
   // the frontmost on-screen thread is the one the dock is currently showing
@@ -5255,13 +6302,16 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
   return (
     <div id="msbai-shell" style={{ position: "fixed", left: geo.x, top: geo.y }}>
     <div className={shell} id="msbai-zoom" style={{ zoom: CFG.zoom, width: WIDTH, position: "relative" }}>
+      <style>{settingsVars(settings || SETTINGS_DEF)}</style>
       <div className={wideGrip} title="drag to make the whole widget wider or narrower"
            onMouseDown={e => beginSplit(e, "wide", "x", 1, WIDTH, WIDE_MIN, WIDE_MAX, sp, CFG.zoom, dispatch)} />
       {/* ── which pane this is: deliberately faint until you go looking for it ── */}
-      <div className={`${viewTab} ${dragTab}`} title="drag to move the whole cluster"
+      <div className={`${viewTab} ${dragTab}`} title="drag to move the whole cluster · double-click desk for settings"
+           style={{ zoom: (settings || SETTINGS_DEF).tabs }}
            onMouseDown={e => beginDrag(e, geo, dispatch)}>
-        <span className={view === "desk" ? "on" : ""}
-              onClick={() => { if (!dragMoved) setView("desk", dispatch); }}>desk</span>
+        <span className={view === "desk" ? "on" : view === "settings" ? "on set" : ""}
+              onClick={() => { if (!dragMoved && view !== "settings") setView("desk", dispatch); }}
+              onDoubleClick={() => setView(view === "settings" ? "desk" : "settings", dispatch)}>{view === "settings" ? "settings" : "desk"}</span>
         {APPS.map(a => (
           <span key={a.key} className={view === a.key ? "on" : ""}
                 onClick={() => { if (!dragMoved) setView(a.key, dispatch); }}>{a.label}</span>
@@ -5269,12 +6319,13 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
         {OWN_VIEWS.map(o => (
           <span key={o.key} className={view === o.key ? "on" : ""} title={o.key === "crm" ? crmBadge(crm, emails, me).tip : ""}
                 onClick={() => { if (!dragMoved) setView(o.key, dispatch); }}>
-            {o.label}{o.key === "crm" && crmBadge(crm, emails, me).n ? ` ${crmBadge(crm, emails, me).n}` : ""}</span>
+            {o.label}{o.key === "crm" && crmBadge(crm, emails, me).n
+              ? <b style={{ color: ACCENT.reply, marginLeft: 4, fontWeight: 800 }}>{crmBadge(crm, emails, me).n}</b> : ""}</span>
         ))}
       </div>
 
       {/* ── Calendar + (Tasks over System) ── */}
-      {view === "desk" && <div className={row} id="msbai-row">
+      {view === "desk" && <div className={row} id="msbai-row" style={deskBig ? { minHeight: deskBig } : undefined}>
         {/* The detail card hangs off the row, not off the calendar grid, so it can use the
             full width of the cluster and cover Tasks / System / Meetings — which is what you
             want when you are reading it. The row is also the right ceiling: the terminal slot
@@ -5286,89 +6337,142 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
         {sel && (() => {
           const inv = inviteParts(sel);
           // Nothing to join and nothing extracted? Fall back to whatever single link the
-          // event carries, so a bare invite with only a url still gets a button — unless that
+          // event carries, so a bare invite with only a url still gets a button, unless that
           // link is already sitting in the prose, where it is clickable where it belongs.
           const only = linkOf(sel);
           const spare = inv.links.length || !only || inv.body.join(" ").includes(only);
           const primary = inv.join || (spare ? "" : only);
+          const close = () => dispatch({ type: "SEL", value: null });
+          const live = evLive(sel);
+          const people = sel.people || [];
+          const going = people.filter(p => p.st === "accepted").length;
+          const rgb = sel.color || "203,211,222";
+          const more = EV_MORE.has(sel.uid || sel.title);
+          const body = inv.body;
+          const longBody = body.filter(Boolean).length > 7;
+          const shownBody = longBody && !more ? body.slice(0, 7) : body;
+          const peopleShown = EV_PPL.has(sel.uid || sel.title) ? people : people.slice(0, 8);
+          const canAnswer = CFG.googleApi && sel.attendees > 0 && !sel.sub && !sel.birthday;
+          const startCall = () => {
+            const want = people.filter(p => !p.me).map(p => (p.em || p.n).toLowerCase());
+            const picked = (team || []).filter(t => want.some(w => w.startsWith(String(t.name || "").toLowerCase().split(" ")[0])
+                                                              || (t.email && w === String(t.email).toLowerCase()))).map(t => t.id);
+            close();
+            dispatch({ type: "ZOOM", value: { ...newZoomBox("meet"), topic: sel.title, picked } });
+          };
           return (
-          <div className={popover}>
-            <div className="x" title="close" onClick={() => dispatch({ type: "SEL", value: null })}>×</div>
-            <div className="t">{sel.title}</div>
-            <div className="s">
-              {sel.start
-                ? `${sel.start.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })} · ${hh(sel.start)}–${hh(sel.end)}`
-                : "All day"}
-            </div>
-            <div className="s">
-              {sel.color && <i className="cdot" style={{ background: `rgb(${sel.color})` }} />}
-              {sel.calendar || ""}
-              {sel.attendees > 1 ? ` · ${sel.attendees} attendees` : ""}
-              {badgeOf(sel) ? ` · ${badgeOf(sel)}` : ""}
-            </div>
-            {sel.loc && <div className="s loc">{linkify(sel.loc)}</div>}
+          <div className={evCard} style={{ "--ev": rgb }} tabIndex={-1}
+               ref={el => { if (!el) return; el.style.setProperty("--ev", rgb);
+                            if (el.dataset.f !== sel.title) { el.dataset.f = sel.title; el.focus(); } }}
+               onKeyDown={e => { if (e.key === "Escape") close(); }}>
+            <div className="glow" />
+            <div className="x" title="close (Esc)" onClick={close}>×</div>
 
-            {/* An invitation is answered here. Google is told; Calendar.app catches up in a moment. */}
-            {!CFG.googleApi && !sel.sub && !sel.birthday && (
-              <div className="resp">
-                <span className="rb" title={sel.attendees > 0 ? "Calendar.app has Accept / Maybe / Decline on the event" : "open this day in Calendar.app"}
-                      onClick={() => openInCalApp(sel)}>
-                  {sel.attendees > 0 && sel.mine === "reply" ? "Answer in Calendar.app" : "Open in Calendar.app"}
+            <div className="hd">
+              <div className="cal"><i />{sel.calendar || "Calendar"}{badgeOf(sel) ? <span className="bdg">{badgeOf(sel)}</span> : null}</div>
+              <div className="t">{sel.title}</div>
+              <div className="when">
+                {sel.start
+                  ? <span>{sel.start.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })} · {hh(sel.start)} to {hh(sel.end)} · {evDur(sel)}</span>
+                  : <span>All day</span>}
+              </div>
+              {live && <div className={`live ${live.k}`}>
+                <span className="dot" />{live.text}
+                {live.k === "now" && <span className="pb"><i style={{ width: `${live.pct}%` }} /></span>}
+              </div>}
+            </div>
+
+            <div className="acts">
+              {primary && <span className={`join${live && (live.k === "now" || live.k === "soon") ? " hot" : ""}`} onClick={() => openUrl(primary)}>
+                <svg viewBox="0 0 16 16"><path d="M2.5 5.2A1.7 1.7 0 0 1 4.2 3.5h5.1A1.7 1.7 0 0 1 11 5.2v5.6a1.7 1.7 0 0 1-1.7 1.7H4.2a1.7 1.7 0 0 1-1.7-1.7z" /><path d="M11 7l3-2v6l-3-2" /></svg>
+                {inv.join ? joinVerb(inv.join) : "Open link"}</span>}
+              {!primary && sel.attendees > 0 && <span className="join alt" onClick={startCall} title="start a Meet or Zoom with these people (Fireflies joins)">
+                <svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" /></svg>Start a call</span>}
+              {primary && <span className={`chip${copied === "ev:" + sel.title ? " ok" : ""}`} onClick={() => copyText(primary, dispatch, "ev:" + sel.title)}>
+                {copied === "ev:" + sel.title ? "copied" : "copy link"}</span>}
+              <span className="chip" title="a new Claude thread with this meeting: who, when, the invite and your prep"
+                    onClick={() => { close(); toClaude(evBrief(sel, inv, preps[sel.uid]), dispatch); }}>prep with Claude</span>
+              {primary && sel.attendees > 0 && <span className="chip" onClick={startCall} title="start a fresh Meet or Zoom with these people instead">new call</span>}
+            </div>
+
+            {canAnswer && (
+              <div className="sec rsvp">
+                <span className="lb">Going?</span>
+                <span className="seg">
+                  {[["accepted", "Yes", ""], ["tentative", "Maybe", "maybe"], ["declined", "No", "declined"]].map(([ans, lbl, st]) => {
+                    const on = sel.mine === st || (st === "" && !sel.mine), busy = evBusy === sel.uid;
+                    return (
+                      <span key={ans} className={`${on ? "on" : ""}${on && st === "declined" ? " no" : ""}${!gOK || busy ? " dis" : ""}`}
+                            title={gOK ? `${lbl}: the organiser is notified` : "connect Google Calendar to answer from here"}
+                            onClick={() => { if (gOK && !busy && !on) respondTo(sel, ans, dispatch); }}>{busy && !on ? "…" : lbl}</span>
+                    );
+                  })}
                 </span>
-                {sel.uid && <span className="gl" onClick={() => openInGoogle(sel, dispatch)}>Open in Google Calendar</span>}
+                {sel.mine === "reply" && <span className="need">needs your answer</span>}
               </div>
             )}
-            {CFG.googleApi && sel.attendees > 0 && !sel.sub && !sel.birthday && (
-              <div className="resp">
-                {[["accepted", "Accept", ""], ["tentative", "Maybe", "maybe"], ["declined", "Decline", "declined"]].map(([ans, lbl, st]) => {
-                  const on = sel.mine === st, busy = evBusy === sel.uid;
-                  return (
-                    <span key={ans}
-                          className={`rb${on ? " on" : ""}${on && st === "declined" ? " no" : ""}${!gOK || busy ? " dis" : ""}`}
-                          title={gOK ? `${lbl} — the organiser is notified` : "connect Google Calendar to answer from here"}
-                          onClick={() => { if (gOK && !busy && !on) respondTo(sel, ans, dispatch); }}>
-                      {busy && !on ? "…" : lbl}
-                    </span>
-                  );
-                })}
-                {sel.uid && <span className="gl" onClick={() => openInGoogle(sel, dispatch)}>Open in Google Calendar</span>}
-              </div>
-            )}
-            {CFG.googleApi && sel.attendees > 0 && !sel.sub && gcal && !gOK && (
-              <div className="hint">Answer invitations from here after a one-time login: <code>desk-widget/gcal.sh auth</code>
-                {gcal === "noclient" ? " — the README has the five-minute setup." : ""}</div>
+            {canAnswer && gcal && !gOK && (
+              <div className="hint">Answer invitations from here after a one time login: <code>desk-widget/gcal.sh auth</code>
+                {gcal === "noclient" ? ". The README has the five minute setup." : ""}</div>
             )}
             {flashEl}
 
-            {sel.uid && preps[sel.uid] && <PrepBody md={preps[sel.uid]} />}
-
-            {primary && (
-              <div className="join" onClick={() => openUrl(primary)}>
-                {inv.join ? joinVerb(inv.join) : "Open link"}
+            {(sel.loc || people.length > 0) && (
+              <div className="sec">
+                {sel.loc && <div className="row loc"><svg viewBox="0 0 16 16"><path d="M8 14s4.5-4.2 4.5-7.6A4.5 4.5 0 0 0 3.5 6.4C3.5 9.8 8 14 8 14z" /><circle cx="8" cy="6.4" r="1.6" /></svg>
+                  <span>{linkify(sel.loc)}</span></div>}
+                {people.length > 0 && <div>
+                  <div className="lh">People · {people.length}{going ? ` · ${going} going` : ""}{sel.organizer ? ` · organized by ${sel.organizer}` : ""}</div>
+                  <div className="ppl">
+                    {peopleShown.map((p, i) => (
+                      <span key={i} className={`pp ${p.st}${p.me ? " me" : ""}`} style={{ animationDelay: `${60 + i * 25}ms` }}
+                            title={`${p.n}${p.em ? " · " + p.em : ""} · ${p.st}${p.em ? " · click to copy the email" : ""}`}
+                            onClick={() => p.em && copyText(p.em, dispatch, "ev:" + p.em)}>
+                        <i style={{ background: evAvatar(p.n) }}>{evInitials(p.n)}</i>
+                        <span className="pn">{copied === "ev:" + p.em ? "copied" : p.me ? "You" : p.n.split(" ")[0]}</span>
+                      </span>
+                    ))}
+                    {people.length > 8 && <span className="pp more" onClick={() => { EV_PPL.has(sel.uid || sel.title) ? EV_PPL.delete(sel.uid || sel.title) : EV_PPL.add(sel.uid || sel.title); dispatch({ type: "SEL", value: { ...sel } }); }}>
+                      <i>{EV_PPL.has(sel.uid || sel.title) ? "−" : `+${people.length - 8}`}</i><span className="pn">{EV_PPL.has(sel.uid || sel.title) ? "less" : "more"}</span></span>}
+                  </div>
+                </div>}
               </div>
             )}
 
-            {inv.body.length > 0 && (
-              <div className="n">
-                {inv.body.map((ln, i) =>
-                  ln === ""
-                    ? <div key={i} className="gap" />
-                    : <div key={i} className={/^\u2022/.test(ln) ? "bul" : ""}>{linkify(ln)}</div>
-                )}
+            {sel.uid && preps[sel.uid] && <div className="sec prep"><div className="lh">Your prep</div><PrepBody md={preps[sel.uid]} /></div>}
+
+            {body.length > 0 && (
+              <div className="sec n">
+                <div className="lh">Details</div>
+                <div className={longBody && !more ? "fade" : ""}>
+                  {shownBody.map((ln, i) =>
+                    ln === ""
+                      ? <div key={i} className="gap" />
+                      : <div key={i} className={/^\u2022/.test(ln) ? "bul" : ""}>{linkify(ln)}</div>
+                  )}
+                </div>
+                {longBody && <span className="tg" onClick={() => { more ? EV_MORE.delete(sel.uid || sel.title) : EV_MORE.add(sel.uid || sel.title); dispatch({ type: "SEL", value: { ...sel } }); }}>
+                  {more ? "show less" : "show everything"}</span>}
               </div>
             )}
 
             {inv.links.length > 0 && (
-              <div className="links">
+              <div className="sec">
                 <div className="lh">Links</div>
-                {inv.links.map((l, i) => (
-                  <div key={i} className="lrow" title={l.url} onClick={() => openUrl(l.url)}>
-                    <span className="ll">{l.label}</span>
-                    <span className="lu">{shortUrl(l.url)}</span>
-                  </div>
-                ))}
+                <div className="lks">
+                  {inv.links.map((l, i) => (
+                    <span key={i} className="lk2" title={l.url} onClick={() => openUrl(l.url)}>
+                      <b>{l.label}</b><span>{shortUrl(l.url)}</span></span>
+                  ))}
+                </div>
               </div>
             )}
+
+            <div className="ft">
+              {!sel.sub && !sel.birthday && <span onClick={() => openInCalApp(sel)}>{sel.attendees > 0 && sel.mine === "reply" && !CFG.googleApi ? "Answer in Calendar" : "Open in Calendar"}</span>}
+              {sel.uid && <span onClick={() => openInGoogle(sel, dispatch)}>Open in Google Calendar</span>}
+              <span className="k">Esc to close</span>
+            </div>
           </div>
           );
         })()}
@@ -5419,15 +6523,49 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
           const mins = Math.round((ev.start.getTime() - nowMs) / 60e3);
           const join = inviteParts(ev).join || linkOf(ev);
           const close = () => markPrepSeen(ev.uid, prepSeen, dispatch);
+          const left = ev.start.getTime() - nowMs;
+          const frac = Math.max(0, Math.min(1, 1 - left / (10 * 60e3)));   // the ring fills over the last ten minutes
+          const C = 2 * Math.PI * 24;
+          const people = (ev.people || []).filter(p => !p.me);
           return (
             <div>
             <div className={scrim} onClick={close} />
-            <div className={popover}>
-              <div className="x" title="close" onClick={close}>×</div>
-              <div className="t">Prep: {ev.title}</div>
-              <div className="s">{hh(ev.start)}–{hh(ev.end)} · {mins > 0 ? `starts in ${mins} min` : mins === 0 ? "starting now" : "started"}</div>
-              <PrepBody md={preps[ev.uid]} />
-              {join && <div className="join" onClick={() => { close(); openUrl(join); }}>{joinVerb(join)}</div>}
+            <div className={`${evCard} ${headsCss}`} tabIndex={-1}
+                 ref={el => { if (!el) return; el.style.setProperty("--ev", ev.color || "100,210,255");
+                              if (el.dataset.f !== ev.uid) { el.dataset.f = ev.uid; el.focus(); } }}
+                 onKeyDown={e => { if (e.key === "Escape") close(); }}>
+              <div className="x" title="close (Esc)" onClick={close}>×</div>
+              <div className="hd hhd">
+                <div className={`cd${mins <= 1 ? " now" : ""}`}>
+                  <svg viewBox="0 0 56 56"><circle className="bg" cx="28" cy="28" r="24" />
+                    <circle className="fg" cx="28" cy="28" r="24" style={{ strokeDasharray: C, strokeDashoffset: C * (1 - frac) }} /></svg>
+                  <span className="num">{mins > 0 ? <span><b>{mins}</b><small>min</small></span> : <b className="nw">now</b>}</span>
+                </div>
+                <div className="mtx">
+                  <div className="cal"><i />Coming up{ev.calendar ? ` · ${ev.calendar}` : ""}</div>
+                  <div className="t">{ev.title}</div>
+                  <div className="when">{hh(ev.start)} to {hh(ev.end)} · {evDur(ev)} · {mins > 0 ? `starts in ${mins} min` : mins === 0 ? "starting now" : `started ${-mins} min ago`}</div>
+                </div>
+              </div>
+              <div className="acts">
+                {join && <span className="join hot" onClick={() => { close(); openUrl(join); }}>
+                  <svg viewBox="0 0 16 16"><path d="M2.5 5.2A1.7 1.7 0 0 1 4.2 3.5h5.1A1.7 1.7 0 0 1 11 5.2v5.6a1.7 1.7 0 0 1-1.7 1.7H4.2a1.7 1.7 0 0 1-1.7-1.7z" /><path d="M11 7l3-2v6l-3-2" /></svg>
+                  {joinVerb(join)}</span>}
+                <span className="chip" onClick={() => { close(); dispatch({ type: "SEL", value: ev }); }}>meeting details</span>
+                <span className="chip" onClick={() => { close(); toClaude(evBrief(ev, inviteParts(ev), preps[ev.uid]), dispatch); }}>prep with Claude</span>
+              </div>
+              {people.length > 0 && <div className="sec">
+                <div className="lh">With</div>
+                <div className="ppl">
+                  {people.slice(0, 10).map((p, i) => (
+                    <span key={i} className={`pp ${p.st}`} style={{ animationDelay: `${60 + i * 25}ms` }} title={`${p.n} · ${p.st}`}>
+                      <i style={{ background: evAvatar(p.n) }}>{evInitials(p.n)}</i><span className="pn">{p.n.split(" ")[0]}</span></span>
+                  ))}
+                  {people.length > 10 && <span className="pp more"><i>+{people.length - 10}</i></span>}
+                </div>
+              </div>}
+              <div className="sec prep"><div className="lh">Your prep</div><PrepBody md={preps[ev.uid]} /></div>
+              <div className="ft"><span onClick={close}>Got it</span><span className="k">Esc to close</span></div>
             </div>
             </div>
           );
@@ -5441,66 +6579,96 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
           const z = zoomBox;
           const set = (k, v) => dispatch({ type: "ZOOM", value: { ...z, [k]: v, msg: "", done: false } });
           const close = () => dispatch({ type: "ZOOM", value: null });
+          const label = z.kind === "meet" ? "Google Meet" : "Zoom";
+          const go = () => startZoom({ ...z, topic: z.topic }, team, dispatch);
+          const n = (z.picked || []).length;
           return (
-          <div className={popover}>
-            <div className="x" title="close" onClick={close}>×</div>
-            <div className="t">Create Meet</div>
-            <div className="s">{z.kind === "meet"
-              ? "Starts a Meet now on your calendar, sends each teammate you pick a calendar invite and their own Slack DM with the link, and adds Fireflies."
-              : "Opens the call with you as host, sends each teammate you pick their own Slack DM with the link, and adds Fireflies."}</div>
-            <div className="form">
-              <div className="full">
-                <div className="fl">Call on</div>
-                <div className={teamChips}>
-                  {[["meet", "Google Meet"], ["zoom", "Zoom"]].map(([k, lbl]) => (
-                    <span key={k} className={`tm${z.kind === k ? " on" : ""}`} onClick={() => set("kind", k)}>{lbl}</span>
+          <div className={`${evCard} ${meetCss}`} tabIndex={-1}
+               ref={el => { if (!el) return; el.style.setProperty("--ev", z.kind === "meet" ? "52,199,140" : "76,140,255");
+                            if (!el.dataset.f) { el.dataset.f = "1"; el.focus(); } }}
+               onKeyDown={e => { if (e.key === "Escape") close(); }}>
+            <div className="x" title="close (Esc)" onClick={close}>×</div>
+            <div className="hd mhd">
+              <div className={`mic${z.busy ? " busy" : ""}${z.done ? " done" : ""}`}>
+                <span className="ring" /><span className="ring r2" />
+                {z.done
+                  ? <svg viewBox="0 0 24 24"><path className="ck" d="M6 12.5l4 4 8-9" /></svg>
+                  : <svg viewBox="0 0 24 24"><rect x="3" y="7" width="12" height="10" rx="2.4" /><path d="M15 10.5l5-3v9l-5-3" /></svg>}
+              </div>
+              <div className="mtx">
+                <div className="cal"><i />Instant call{n ? <span className="bdg">{n} invited</span> : null}</div>
+                <div className="t">{z.done ? `Your ${label} is live` : "Start a call now"}</div>
+                <div className="when">{z.done ? "The join link is on your clipboard." : `Fireflies joins to take notes.${n ? " Everyone you pick gets the link." : ""}`}</div>
+              </div>
+            </div>
+
+            {!z.done && <div className="sec">
+              <div className="lh">Call on</div>
+              <div className="plats">
+                {[["meet", "Google Meet", "calendar invite and a Slack DM"], ["zoom", "Zoom", "a Slack DM with the link"]].map(([k, lbl, sub]) => (
+                  <span key={k} className={`pl ${k}${z.kind === k ? " on" : ""}`} onClick={() => set("kind", k)}>
+                    <i>{k === "meet"
+                      ? <svg viewBox="0 0 24 24"><rect x="3" y="7" width="12" height="10" rx="2.4" /><path d="M15 10.5l5-3v9l-5-3" /></svg>
+                      : <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="13" height="11" rx="3" /><path d="M15.5 10.5l5-3v9l-5-3" /></svg>}</i>
+                    <span><b>{lbl}</b><small>{sub}</small></span>
+                    <em className="rad" />
+                  </span>
+                ))}
+              </div>
+            </div>}
+
+            {!z.done && <div className="sec">
+              <div className="lh">Name</div>
+              <input className="nm" type="text" placeholder="Quick sync"
+                     ref={el => { if (el && document.activeElement !== el && el.value !== (z.topic || "")) el.value = z.topic || ""; }}
+                     onInput={e => { z.topic = e.target.value; }}
+                     onBlur={e => set("topic", e.target.value)}
+                     onKeyDown={e => { if (e.key === "Enter") startZoom({ ...z, topic: e.target.value }, team, dispatch); }} />
+            </div>}
+
+            {!z.done && <div className="sec">
+              <div className="lh" style={{ display: "flex", alignItems: "baseline" }}>
+                <span>Invite{n ? ` · ${n} picked` : ""}</span>
+                <span className="lk3" style={{ marginLeft: "auto" }}
+                      title={`Teammates come from Slack: active people with your email domain, checked once a day${teamNotes.synced ? `, last ${agoShort(teamNotes.synced)}` : ""}`}
+                      onClick={() => { if (!teamSync) teamCmd("sync", dispatch); }}>{teamSync ? "checking Slack\u2026" : "update from Slack"}</span>
+              </div>
+              {(teamNotes.added.length > 0 || teamNotes.gone.length > 0) && (
+                <div className="tnote">
+                  {teamNotes.added.length > 0 && <div>New from Slack: <b>{teamNotes.added.map(p => p.name).join(", ")}</b></div>}
+                  {teamNotes.gone.map(p => (
+                    <div key={p.id}><b>{p.name}</b> is no longer active in Slack.{" "}
+                      <span className="lk3" onClick={() => teamCmd(`drop ${p.id}`, dispatch)}>Take off the list</span></div>
                   ))}
                 </div>
+              )}
+              <div className="ppl">
+                {team.length === 0 && <span className="none">No teammates yet. Click update from Slack.</span>}
+                {team.map((p, i) => {
+                  const on = (z.picked || []).includes(p.id);
+                  return (
+                    <span key={p.id} className={`pp pick${on ? " on" : ""}`} style={{ animationDelay: `${40 + i * 18}ms` }}
+                          onClick={() => set("picked", on ? z.picked.filter(x => x !== p.id) : [...(z.picked || []), p.id])}>
+                      <i style={{ background: on ? "" : evAvatar(p.name) }}>{on ? "\u2713" : evInitials(p.name)}</i>
+                      <span className="pn">{p.name}</span>
+                    </span>
+                  );
+                })}
               </div>
-              <div className="full">
-                <div className="fl">Name</div>
-                <input type="text" placeholder="Quick sync"
-                       ref={el => { if (el && document.activeElement !== el && el.value !== (z.topic || "")) el.value = z.topic || ""; }}
-                       onInput={e => { z.topic = e.target.value; }}
-                       onBlur={e => set("topic", e.target.value)}
-                       onKeyDown={e => { if (e.key === "Enter") startZoom({ ...z, topic: e.target.value }, team, dispatch); }} />
-              </div>
-              <div className="full">
-                <div className="fl" style={{ display: "flex", alignItems: "baseline" }}>
-                  <span>Invite {(z.picked || []).length ? `(${z.picked.length})` : ""}</span>
-                  <span className={teamSyncLink} style={{ marginLeft: "auto" }}
-                        title={`Teammates come from Slack: active people with your email domain, checked once a day${teamNotes.synced ? `, last ${agoShort(teamNotes.synced)}` : ""}`}
-                        onClick={() => { if (!teamSync) teamCmd("sync", dispatch); }}>
-                    {teamSync ? "checking Slack\u2026" : "update from Slack"}</span>
-                </div>
-                {(teamNotes.added.length > 0 || teamNotes.gone.length > 0) && (
-                  <div className={teamNote}>
-                    {teamNotes.added.length > 0 && <div>New from Slack: <b>{teamNotes.added.map(p => p.name).join(", ")}</b></div>}
-                    {teamNotes.gone.map(p => (
-                      <div key={p.id}><b>{p.name}</b> is no longer active in Slack.{" "}
-                        <span className="lk" onClick={() => teamCmd(`drop ${p.id}`, dispatch)}>Take off the list</span></div>
-                    ))}
-                  </div>
-                )}
-                <div className={teamChips}>
-                  {team.length === 0 && <span className="none">No teammates yet. Click update from Slack.</span>}
-                  {team.map(p => {
-                    const on = (z.picked || []).includes(p.id);
-                    return <span key={p.id} className={`tm${on ? " on" : ""}`}
-                                 onClick={() => set("picked", on ? z.picked.filter(x => x !== p.id) : [...(z.picked || []), p.id])}>
-                             {on ? "\u2713 " : ""}{p.name}</span>;
-                  })}
-                </div>
-              </div>
-            </div>
-            <div className="go">
+            </div>}
+
+            {z.done && z.msg && <div className="sec okmsg">{z.msg}</div>}
+
+            <div className="ft2">
               {z.done
                 ? <span className="join" onClick={close}>Done</span>
-                : <span className={`join${z.busy ? " dis" : ""}`} onClick={() => startZoom(z, team, dispatch)}>
-                    {z.busy ? "Creating…" : "Confirm"}</span>}
-              {!z.done && <span className="cancel" onClick={close}>Cancel</span>}
+                : <span className={`join${z.busy ? " dis" : ""}`} onClick={go}>
+                    {z.busy ? <span className="spin" /> : <svg viewBox="0 0 16 16"><path d="M2.5 5.2A1.7 1.7 0 0 1 4.2 3.5h5.1A1.7 1.7 0 0 1 11 5.2v5.6a1.7 1.7 0 0 1-1.7 1.7H4.2a1.7 1.7 0 0 1-1.7-1.7z" /><path d="M11 7l3-2v6l-3-2" /></svg>}
+                    {z.busy ? `Starting your ${label}\u2026` : `Start ${label}`}</span>}
+              {!z.done && <span className="chip" onClick={close}>Cancel</span>}
+              <span className="k">Esc to close</span>
             </div>
-            {z.msg && <div className={`flash${z.done ? "" : " bad"}`}>{z.msg}</div>}
+            {z.msg && !z.done && <div className="flash bad">{z.msg}</div>}
           </div>
           );
         })()}
@@ -5584,14 +6752,51 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
           </div>
           );
         })()}
-        <div className={splitH} title="drag: trade calendar height for terminal space"
-             style={{ left: 0, right: 0, bottom: -CFG.gap, height: CFG.gap }}
-             onMouseDown={e => beginRowSplit(e, sp, "dock", dispatch)} />
+        {CFG.terminal
+          ? <div className={splitH} title="drag: trade calendar height for terminal space"
+                 style={{ left: 0, right: 0, bottom: -CFG.gap, height: CFG.gap }}
+                 onMouseDown={e => beginRowSplit(e, sp, "dock", dispatch)} />
+          : <div className={splitH} title="drag to give Calendar and Tasks more room (Notes shrinks when the screen runs out)"
+                 style={{ left: 0, right: 0, bottom: -CFG.gap, height: CFG.gap }}
+                 onMouseDown={e => beginBottomSplit(e, sp, "dock", dispatch)} />}
         <div className={splitV} title="drag to resize"
              style={{ top: 0, bottom: 0, left: calW, width: CFG.gap }}
              onMouseDown={e => beginSplit(e, "cal", "x", 1, calW, 240, WIDTH - 200, sp, CFG.zoom, dispatch)} />
+        <div style={{ width: calW, flex: "0 0 auto", display: "flex", flexDirection: "column", gap: CFG.gap }}>
+          {/* ── Above the calendar: System on the left, + Meet on the right, two pills that together
+                 span the calendar's width. ── */}
+          <div style={{ display: "flex", gap: CFG.gap, flex: "0 0 auto", height: hMeet }}>
+            <div className={panel} style={{ flex: "2 1 0", minWidth: 0, padding: "0 14px", overflow: "hidden", cursor: "pointer",
+                                             display: "flex", alignItems: "center" }}
+                 title={(sysMode === "disk" ? "click for CPU and RAM · " : "click for storage detail · ")
+                        + `CPU ${Math.round(stats.cpu)}% · RAM ${gb(stats.memUsed).toFixed(1)}G of ${gb(stats.memTotal).toFixed(0)}G · ${kbGb(stats.diskFree).toFixed(0)}G free of ${kbGb(stats.diskTotal).toFixed(0)}G`}
+                 onClick={() => flipSysMode(sysMode, dispatch)}>
+              {sysMode !== "disk" && <span className={sysMini} style={{ width: "100%", justifyContent: "space-between" }}>
+                <span>CPU <b style={{ color: ACCENT.cpu }}>{Math.round(stats.cpu)}%</b></span>
+                <span>RAM <b style={{ color: ACCENT.ram }}>{Math.round(stats.memPct)}%</b></span>
+                <span><b style={{ color: ACCENT.disk }}>{kbGb(stats.diskFree).toFixed(0)}G</b> free</span>
+              </span>}
+              {sysMode === "disk" && <span className={sysMini} style={{ width: "100%", alignItems: "center", gap: 10 }}>
+                <span className="k">Disk</span>
+                <span><b style={{ color: "#fff" }}>{kbGb(stats.diskUsed).toFixed(0)}G</b> of {kbGb(stats.diskTotal).toFixed(0)}G</span>
+                <span style={{ flex: "1 1 auto", minWidth: 24, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.12)", overflow: "hidden" }}>
+                  <i style={{ display: "block", height: "100%", width: `${Math.min(100, Math.round(stats.diskPct))}%`, borderRadius: 2,
+                              background: stats.diskPct >= 90 ? "#FF5F5F" : stats.diskPct >= 80 ? "#FF9CA0" : ACCENT.disk }} /></span>
+                <span><b style={{ color: ACCENT.disk }}>{kbGb(stats.diskFree).toFixed(0)}G</b> free</span>
+              </span>}
+            </div>
+            <div className={panel} style={{ flex: "1 1 0", minWidth: 0, padding: "0 11px", overflow: "hidden", cursor: "pointer",
+                                             display: "flex", alignItems: "center", justifyContent: "center" }}
+                 title="start a call now: pick Google Meet or Zoom, pick teammates, Fireflies joins"
+                 onClick={() => dispatch({ type: "ZOOM", value: zoomBox ? null : newZoomBox("meet") })}>
+              <span className={callBtn}>
+                <svg viewBox="0 0 10 10" width="8" height="8" aria-hidden="true" style={{ display: "block", marginRight: 5 }}>
+                  <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+                Meet</span>
+            </div>
+          </div>
         <div id="msbai-cal" className={panel}
-             style={{ width: calW, flex: "0 0 auto", paddingLeft: 10, minHeight: calMinH || undefined,
+             style={{ flex: "1 1 auto", paddingLeft: 10, minHeight: calMinH || undefined,
                       display: "flex", flexDirection: "column" }}>
           <div className={head}>
             <span>{today}</span>
@@ -5680,7 +6885,7 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
                     {h <= 30 && <span style={{ fontWeight: 500, opacity: .75, marginRight: 4,
                                                fontVariantNumeric: "tabular-nums" }}>{hh(e.start)}</span>}
                     {e.title}
-                    {badge && e.cols === 1 && <span className="b">{badge}</span>}
+                    {badge && e.cols === 1 && <span className="b" style={e.mine === "reply" ? { color: ACCENT.reply } : undefined}>{badge}</span>}
                   </div>
                   {h > 30 && (
                     <div className="s">
@@ -5693,6 +6898,7 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
               );
             })}
           </div>
+        </div>
         </div>
 
         <div className={col} style={{ width: colW, flex: "0 0 auto" }}>
@@ -5720,8 +6926,8 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
                 14px into the right gutter the same way, so the overlay scrollbar sits there instead
                 of on top of each open row's copy button. */}
             <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
-            <div style={{ position: "absolute", top: 0, bottom: 0, left: -8, right: -14,
-                          overflow: "auto", paddingLeft: 8, paddingRight: 14 }}>
+            <div className={noBar} style={{ position: "absolute", top: 0, bottom: 0, left: -20, right: -14,
+                          overflow: "auto", paddingLeft: 20, paddingRight: 14 }}>
               {taskTab === "collab" && (() => {
                 // which board tasks are already twinned with a desk task (a `· synced` line)
                 const onDesk = new Set();
@@ -5779,16 +6985,38 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
                 const has = notes.length > 0 || news.length > 0;
                 const open = has && (openTasks || []).includes(t.title);
                 const pin = pins.includes(t.title);
+                const mk = MARKS.find(m => m.key === (marks || {})[t.title]);
+                const dragging = taskDrag && taskDrag.title === t.title;
                 return (
-                  <div key={t.title} className={`${taskRow}${pin ? " pin" : ""}${news.length ? " notify" : ""}`}>
+                  <div key={t.title} data-task={t.title}
+                       className={`${taskRow}${pin ? " pin" : ""}${news.length ? " notify" : ""}${mk ? " marked" : ""}${dragging ? " dragging" : ""}`}
+                       style={mk ? { "--mk": mk.hex, "--mkrgb": mk.rgb } : undefined}
+                       ref={el => { if (!el) return; if (mk) { el.style.setProperty("--mk", mk.hex); el.style.setProperty("--mkrgb", mk.rgb); }
+                                    else { el.style.removeProperty("--mk"); el.style.removeProperty("--mkrgb"); } }}
+                       onMouseLeave={() => { clearTimeout(markTimer); if (markPop === t.title) dispatch({ type: "MARK_POP", value: "" }); }}>
+                    <span className="mkzone"
+                          onMouseEnter={() => { clearTimeout(markTimer);
+                                                markTimer = setTimeout(() => dispatch({ type: "MARK_POP", value: t.title }), MARK_HOVER_MS); }}
+                          onMouseLeave={() => clearTimeout(markTimer)} />
+                    {markPop === t.title && (
+                      <div className="mkpop" onClick={e => e.stopPropagation()} onDoubleClick={e => e.stopPropagation()}>
+                        {MARKS.map(m => <span key={m.key} className={`sw${mk && mk.key === m.key ? " on" : ""}`}
+                                              title={mk && mk.key === m.key ? `clear the ${m.name} highlight` : `highlight ${m.name}`}
+                                              style={{ background: m.hex }}
+                                              onClick={() => setMark(t.title, m.key, marks, dispatch)} />)}
+                        {mk && <span className="clr" title="no highlight" onClick={() => setMark(t.title, "", marks, dispatch)}>×</span>}
+                      </div>
+                    )}
                     <input type="checkbox" title="done — moves it to Done in TASKS.md, then queues synced ClickUp tasks to close"
                            onChange={() => completeTask(t, dispatch)} />
                     <div className="body" style={{ cursor: has ? "pointer" : "default" }}
                          title={(news.length && !open ? "new: open to see what came in · " : "")
                                 + (has ? (open ? "click to fold" : `click for ${notes.length} note${notes.length === 1 ? "" : "s"}`) + " · " : "")
-                                + (pin ? "double-click to unpin" : "double-click to pin to the top")}
-                         onMouseDown={e => { if (e.detail > 1) e.preventDefault(); }}
+                                + (pin ? "double-click to unpin" : "double-click to pin to the top")
+                                + " · hold and drag to move · rest on the right edge to highlight"}
+                         onMouseDown={e => { if (e.detail > 1) e.preventDefault(); else beginTaskDrag(e, t.title, activeTitles, pins, dispatch); }}
                          onClick={e => {
+                           if (taskDragged) { taskDragged = false; return; }   // that was a drag, not a click
                            // the second click of a double-click: the first already toggled the notes,
                            // so put them back, and let onDoubleClick do the pinning
                            if (has) toggleTask(t.title, e.detail === 2 ? savedOpen() : openTasks, dispatch);
@@ -5834,33 +7062,11 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
             </div>
           </div>
 
-          {/* ── One row: System stats on the left, a small Create Meet pill on the right, open space between. ── */}
-          <div style={{ display: "flex", gap: CFG.gap, flex: "0 0 auto", height: hMeet }}>
-            <div className={panel} style={{ flex: "0 0 auto", padding: "0 12px", overflow: "hidden",
-                                             display: "flex", alignItems: "center" }}
-                 title={`CPU ${Math.round(stats.cpu)}% · RAM ${gb(stats.memUsed).toFixed(1)}G of ${gb(stats.memTotal).toFixed(0)}G · ${kbGb(stats.diskFree).toFixed(0)}G free of ${kbGb(stats.diskTotal).toFixed(0)}G`}>
-              <span className={sysMini}>
-                <span>CPU <b style={{ color: ACCENT.cpu }}>{Math.round(stats.cpu)}%</b></span>
-                <span>RAM <b style={{ color: ACCENT.ram }}>{Math.round(stats.memPct)}%</b></span>
-                <span><b style={{ color: ACCENT.disk }}>{kbGb(stats.diskFree).toFixed(0)}G</b> free</span>
-              </span>
-            </div>
-            {/* Open space between System and + Meet, left empty on purpose. */}
-            <div style={{ flex: "1 1 0", minWidth: 0 }} />
-            <div className={panel} style={{ flex: "0 0 auto", padding: "0 11px", overflow: "hidden",
-                                             display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span className={callBtn} title="start a call now: pick Google Meet or Zoom, pick teammates, Fireflies joins"
-                    onClick={() => dispatch({ type: "ZOOM", value: zoomBox ? null : newZoomBox("meet") })}>
-                <svg viewBox="0 0 10 10" width="8" height="8" aria-hidden="true" style={{ display: "block", marginRight: 5 }}>
-                  <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
-                Meet</span>
-            </div>
-          </div>
         </div>
       </div>}
 
       {/* ── Terminal: tabs on top, the window parks in the slot below ── */}
-      {view === "desk" && CFG.dockHeight > 0 && isMain && (
+      {view === "desk" && CFG.terminal && CFG.dockHeight > 0 && isMain && (
         <div className={paneBlock}>
           <div className={tabBar}>
             {tabs.map(t => {
@@ -5903,24 +7109,33 @@ export const render = ({ cal, allDay, tasks, notes, notesDirty, tabs, main, view
                onClick={() => showApp(appByKey(view).name)}>
             {appByKey(view).label} parks here
           </div>
+          {viewGrip}
         </div>
       )}
       {/* ── Priorities: the team's workstreams as a flow, newest at the bottom. ── */}
-      {view === "priorities" && (
+      {view === "priorities" && (<div className={paneBlock}>
         <FlowView flow={flow} status={flowStatus} sel={flowSel} copied={copied} height={paneH} me={me}
                   mine={mine} tab={flowTab} doneOpen={flowDone} grpOpen={flowGrp} split={sp} showClosed={flowClosed} dispatch={dispatch} />
-      )}
+        {viewGrip}
+      </div>)}
+      {/* ── Settings: double-click the desk tab. ── */}
+      {view === "settings" && (<div className={paneBlock}>
+        <SettingsView settings={settings || SETTINGS_DEF} height={paneH} dispatch={dispatch} />
+        {viewGrip}
+      </div>)}
       {/* ── Wiki: the company's knowledge, top down. ── */}
-      {view === "wiki" && (
+      {view === "wiki" && (<div className={paneBlock}>
         <WikiView wiki={wiki} inbox={wikiInbox} live={wikiLive} page={wikiPage} q={wikiQ} kind={wikiKind} as={wikiAs}
                   add={wikiAdd} origin={wikiOrigin} flow={flow} mine={mine} me={me} tasks={tasks} cuTasks={cuTasks}
                   height={paneH} dispatch={dispatch} />
-      )}
+        {viewGrip}
+      </div>)}
       {/* ── CRM: what is most urgent across the three companies, by Ayesha's four levels, plus the Inbox. ── */}
-      {view === "crm" && (
+      {view === "crm" && (<div className={paneBlock}>
         <CrmView crm={crm} ui={crmUi || initialState.crmUi} emails={emails} mail={mail} mailSync={mailSync} me={me}
                  copied={copied} height={paneH} tasks={tasks} flow={flow} openTasks={openTasks} dispatch={dispatch} />
-      )}
+        {viewGrip}
+      </div>)}
       {/* ── Notes ── */}
       <div className={panel} id="msbai-notes" style={{ position: "relative" }}>
         <div className={splitH} title="drag to make the notes taller or shorter"

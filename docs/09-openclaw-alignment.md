@@ -38,6 +38,9 @@ This is only what was said in the Oct 5 calls; OpenClaw's own code is the author
 | Wiki page | A page linked to its workstream and its ClickUp lists | `wiki.json` |
 | Person (CRM) | ClickUp CRM v3 records (Hermes), merged into one Rolodex page per person | `.crm/crm.json`, `rolodex/` |
 | Outreach item | Contract, lead, proposal, partner, follow up, interested later, mention, email, with a score | `.crm/crm.json` |
+| Pursuit timeline and bid gate | Per open proposal: 7 weeks, 21, 14, 7 days; 3 customer conversations by 14 days out | `.crm/plus.json` pursuits |
+| Customer type | buyer, end user, TPOC, customer side, partner, peer, typed from Hermes's fields | `.crm/plus.json` types |
+| Campaign | One per open pursuit with customer people (made on its own), plus hand made lists; targets by stage, TPOCs first | `.crm/plus.json` campaigns, `campaigns.json` |
 
 ## Side by side
 
@@ -51,7 +54,7 @@ This is only what was said in the Oct 5 calls; OpenClaw's own code is the author
 | What is each stream building toward? | `target`, `target_date` | Not described | Widget only |
 | Who files tasks from meetings? | The widget files only its owner's own asks (into TASKS.md) and pairs them with Atlas's | Atlas files every task for everyone | Two writers, reconciled by the widget |
 | How is a task known done? | Desk tick closes the ClickUp twin; the owner's Slack, sent mail and closed tasks count as evidence | Not described; Kriss: completion is "the biggest bane of our current setup" | The widget closes the owner's tasks; nothing closes other people's |
-| Where does the CRM live? | Reads ClickUp CRM v3; writes four kinds of record on a click | Hermes's SQL and memories, synced to ClickUp CRM v3 hourly | Same records through ClickUp; the widget cannot see Hermes's email history directly |
+| Where does the CRM live? | Reads ClickUp CRM v3 hourly through the REST API; writes nothing | Hermes's SQL and memories, synced to ClickUp CRM v3 hourly | Same records through ClickUp, including the Conversations list Hermes captures |
 | Wiki | 76 pages, linked to lists and streams | Not part of OpenClaw | Widget only |
 
 ## Where the two drift today
@@ -64,7 +67,24 @@ These are real cases, not guesses.
 4. **Streams never close.** A stream that builds to an event is done when the event happens. Without that, every list looks active forever and nobody can tell what matters this week.
 5. **Rank is text.** The widget's rank and status reach ClickUp as a paragraph at the top of each list's description and as the Workstream Board doc. A person can read them; a program has to parse them.
 6. **No direct line.** The widget reads ClickUp only. It does not read OpenClaw's JSON or Hermes's files, and OpenClaw does not read the widget's files.
-7. **One ClickUp budget.** About 1,000 calls a day per account, shared by the widget, OpenClaw jobs on the same login, and Claude chats. On Oct 6 it was spent by about 9 am Pacific, and every ClickUp job waited until the reset. Every teammate's widget on their own login spreads the load; OpenClaw jobs on a person's login take from that person's budget.
+7. **One ClickUp budget.** About 1,000 connector calls a day per account, shared by the widget, OpenClaw jobs on the same login, and Claude chats. On Oct 6 it was spent by about 9 am Pacific, and every ClickUp job waited until the reset. Since Oct 7 the widget's CRM reads through the REST API with the owner's token instead, which has no daily cap; OpenClaw could do the same for its own heavy reads.
+
+## Division of labor (proposed Oct 7)
+
+So the widget never does what OpenClaw already does, the CRM is split like this:
+
+| OpenClaw (Hermes and friends) | The widget |
+|-------------------------------|------------|
+| Finds and opens pursuits (puts proposals in the Proposals list with dates and release state) | Shows them, sorted with the live timelines first |
+| Researches the people on each pursuit and links them (Contacts, Pursuit field) | Turns them into a campaign on its own, no click |
+| Sets roles and TPOC flags, records restrictions ("no direct contact while the topic is open") | Honours them: TPOCs first, the window open or closed, **No direct contact** instead of a draft |
+| Captures email both ways (the capture address), logs LinkedIn and calls from screenshots | Reads that as evidence for each target's stage |
+| Keeps ClickUp current (follow ups, interested later, notes) | Writes nothing to the CRM; drafts messages in Gmail only |
+
+**Two overlaps to settle with Kriss:**
+
+1. **Customer typing.** The widget types every contact (buyer, end user, TPOC, customer side, partner, peer) from Hermes's fields. If Hermes already types people, the widget should read that field instead.
+2. **The gate count.** The widget counts customer conversations per pursuit against the playbook's 3 by 14 days out. If OpenClaw tracks the same, one of them should be the source.
 
 ## Decisions for Kriss
 
@@ -90,7 +110,7 @@ Each with the options and what the widget does today. None of these are decided.
 
 **5. Contracts and folders.** Should OpenClaw's contract list line up one to one with ClickUp folders (and the CRM's level 1 contracts), or stay its own layer above them? If it stays separate, a contract to folder or list mapping published in ClickUp would let the widget show contracts too.
 
-**6. The CRM path.** For the CRM tab to use Hermes's full email history, the widget needs either the path and read permission on the Hermes Agent folder (Ryland asked for this on Oct 5), or a read API. *Today:* it reads only what Hermes syncs into ClickUp.
+**6. The CRM path.** For the CRM tab to use Hermes's full email history, the widget needs either the path and read permission on the Hermes Agent folder (Ryland asked for this on Oct 5), or a read API. *Today:* it reads what Hermes syncs into ClickUp, including the Conversations list, through the REST API.
 
 **7. Web app or APIs.** The widget is for internal people only; the SSOT still needs a web app for people outside the company, with access by role. For widgets, read APIs would let each one pull OpenClaw's understanding directly instead of only through ClickUp.
 

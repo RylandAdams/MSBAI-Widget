@@ -30,6 +30,7 @@ SECRET = [
     (r"-----BEGIN [A-Z ]*PRIVATE KEY-----", "private key"),
     (r"\"client_secret\"\s*:\s*\"[^\"]{8,}\"", "OAuth client secret"),
     (r"\bpk_(?:live|test)_[A-Za-z0-9]{20,}|\bsk_(?:live|test)_[A-Za-z0-9]{20,}", "Clerk/Stripe key"),
+    (r"\bpk_\d{4,}_[A-Z0-9]{20,}", "ClickUp personal API token"),
 ]
 PERSONAL = [
     (r"U01RGF1301F", "owner Slack id"),
@@ -38,7 +39,8 @@ PERSONAL = [
     (r"/Users/[a-z]+", "home folder path"),
 ]
 BANNED_FILES = re.compile(r"(^|/)(TASKS\.md|\.fireflies-key|\.gcal-(client|token)\.json|practice\.tsv|crm\.json|"
-                          r"alerts\.json|outbox\.jsonl|mentions\.tsv|me\.json|team\.tsv|crm-seed\.tsv|crm-exclude\.txt)$|"
+                          r"alerts\.json|outbox\.jsonl|mentions\.tsv|me\.json|team\.tsv|crm-seed\.tsv|crm-exclude\.txt|campaigns\.json|"
+                          r"plus\.json|touches\.jsonl|meetings-log\.jsonl|cu-cache\.json|cu-lists\.json|\.clickup-token)$|"
                           r"(^|/)(rolodex|transcripts|\.crm|\.flow|\.watch|\.emails|\.prep|\.zoom|\.wiki|\.tasks-sync|backups|vendor)/")
 EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[a-z]{2,}")
 EMAIL_OK = re.compile(r"(@example\.com$|^fred@fireflies\.ai$|^notetaker@|@noreply|^noreply@|^servicenow@helpdesk\.hpc\.mil$|@zoomcrc\.com$)")
